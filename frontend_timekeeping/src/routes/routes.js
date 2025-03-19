@@ -6,7 +6,8 @@ import OverView from "../pages/overview/Overview";
 import TimeManagement from "../pages/time-management/TimeManagement";
 import DocumentManagement from "../pages/document-management/DocumentManagement";
 import Reports from "../pages/reports/Reports";
-
+// Import các component mới cho Role và Account
+import RoleManagement from "../pages/account-management/RoleManagement"; // Giả định
 
 const AppRoutes = () => {
   return (
@@ -14,7 +15,12 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/overview" element={<OverView />} />
       <Route path="/time-management" element={<TimeManagement />} />
-      <Route path="/account-management" element={<AccountManagement />} />
+      {/* Route chính cho account-management và các route con */}
+      <Route path="/account-management">
+        <Route index element={<AccountManagement />} />{" "}
+        <Route path="role" element={<RoleManagement />} />{" "}
+        <Route path="account" element={<AccountManagement />} />{" "}
+      </Route>
       <Route path="/document-management" element={<DocumentManagement />} />
       <Route path="/reports" element={<Reports />} />
     </Routes>
