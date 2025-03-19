@@ -7,7 +7,8 @@ import TimeManagement from "../pages/TimeKeeping/Timekeeping";
 import Dayoffs from "../pages/Dayoffs/Dayoffs";
 import DayoffTypes from "../pages/Dayoff-type/Dayoff-type";
 import Reports from "../pages/reports/Reports";
-
+// Import các component mới cho Role và Account
+import RoleManagement from "../pages/account-management/RoleManagement"; // Giả định
 
 const AppRoutes = () => {
   return (
@@ -18,6 +19,11 @@ const AppRoutes = () => {
       <Route path="/account-management" element={<AccountManagement />} />
       <Route path="/dayoffs" element={<Dayoffs />} />
       <Route path="/dayoff-types" element={< DayoffTypes />} />
+      <Route path="/account-management">
+        <Route index element={<AccountManagement />} />{" "}
+        <Route path="role" element={<RoleManagement />} />{" "}
+        <Route path="account" element={<AccountManagement />} />{" "}
+      </Route>
       <Route path="/reports" element={<Reports />} />
     </Routes>
   );
