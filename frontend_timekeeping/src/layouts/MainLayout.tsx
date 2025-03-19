@@ -4,15 +4,16 @@ import Sidebar from "../components/Sidebar";
 import HeaderComponent from "../components/Header";
 
 interface MainLayoutProps {
+    title: string;
     children: ReactNode;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ title, children }) => {
     return (
         <Layout style={{ minHeight: "100vh" }}>
             <Sidebar />
             <Layout>
-                <HeaderComponent />
+                <HeaderComponent title={title}/>
                 {children}
             </Layout>
         </Layout>

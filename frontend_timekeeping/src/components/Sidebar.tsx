@@ -10,6 +10,8 @@ import { Layout, Menu, Typography } from "antd";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom"; // Thêm useNavigate và Link
 
+import "../App.css";
+
 const { Sider } = Layout;
 const { Title } = Typography;
 
@@ -26,6 +28,7 @@ const Sidebar: React.FC = () => {
         mode="inline"
         defaultSelectedKeys={["1"]}
         style={{ background: "#208f39" }}
+        className="sidebar-menu"
         items={[
           {
             key: "1",
@@ -40,12 +43,22 @@ const Sidebar: React.FC = () => {
           {
             key: "3",
             icon: <ClockCircleOutlined />,
-            label: <Link to="/time-management">Quản lý chấm công</Link>,
+            label: <Link to="/timesheet">Quản lý chấm công</Link>,
           },
           {
             key: "4",
             icon: <FileTextOutlined />,
-            label: <Link to="/document-management">Quản lý đơn từ</Link>,
+            label: "Đơn từ",
+            children: [
+              {
+                key: "4-1",
+                label: <Link to="/Dayoffs">Danh sách đơn từ</Link>,
+              },
+              {
+                key: "4-2",
+                label: <Link to="/Dayoff-types">Loại đơn từ</Link>,
+              },
+            ],
           },
           {
             key: "5",
