@@ -1,0 +1,12 @@
+/* Áp dụng style cho submenu */
+.ant-menu-dark .ant-menu-sub {
+    background: #208f39 !important;
+    /* Màu nền giống menu cha */
+}
+
+/* Tùy chỉnh màu chữ khi hover hoặc chọn submenu */
+.ant-menu-dark .ant-menu-sub .ant-menu-item:hover,
+.ant-menu-dark .ant-menu-sub .ant-menu-item-selected {
+    background: #1a7530 !important;
+    /* Màu khi hover hoặc được chọn */
+}
