@@ -72,6 +72,7 @@ export const getStaffByPosition = async (req, res) => {
     });
     res.json(staff);
   } catch (error) {
+    console.error("Error in getStaffById:", error);
     res.status(500).json({ error: "Lỗi khi lấy nhân viên" });
   }
 };

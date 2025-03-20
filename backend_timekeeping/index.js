@@ -18,9 +18,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 const app = express();
-
-app.use(cors());
-
+app.use(cors()); // Thêm middleware CORS
 app.use(express.json()); // Middleware để parse JSON request body
 app.use(cookieParser());
 // Định nghĩa các route API
