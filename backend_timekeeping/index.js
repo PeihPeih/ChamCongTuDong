@@ -1,6 +1,7 @@
 import dotenv from "dotenv"; // Dùng import thay vì require
 import express from "express"; // Dùng import thay vì require
 import sequelize from "./models/index.js"; // Dùng import thay vì require
+import cors from "cors";
 
 // Import tất cả routes
 import staffRoutes from "./routes/StaffRoutes.js";
@@ -33,7 +34,6 @@ app.use("/api/positions", positionRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/dayofftypes", dayOffTypeRoutes);
-
 
 // Kiểm tra kết nối database trước khi chạy server
 sequelize
