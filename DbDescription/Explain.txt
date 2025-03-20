@@ -21,6 +21,7 @@
 - Reason: Lí do Nghỉ
 - ManageId: Người duyệt đơn
 - Loại đơn: nghỉ phép, nghỉ ốm, nghỉ có phép, nghỉ không lương
+- Trạng thái: 1: Chờ duyệt, 2: Đã duyệt, 3: Từ chối
 
 * Theo dõi (Timekeeping) *
 - Ghi lại thời gian ra vào chi tiết như ngày, giờ vào, giờ ra của nhân viên trong ca làm

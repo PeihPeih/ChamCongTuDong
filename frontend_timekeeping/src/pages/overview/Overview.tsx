@@ -47,7 +47,7 @@ const OverView: React.FC = () => {
     };
 
     return (
-        <MainLayout>
+        <MainLayout title="Tổng quan">
             <Content style={{ margin: "16px" }}>
                 <Row gutter={16} style={{ marginBottom: "16px" }}>
                     <Col flex="auto">

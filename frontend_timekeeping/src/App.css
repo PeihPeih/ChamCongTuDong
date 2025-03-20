@@ -36,3 +36,13 @@
     transform: rotate(360deg);
   }
 }
+
+.sidebar-menu .ant-menu-sub, .ant-menu-item-selected{
+  background: #137228 !important;
+  color: white !important;
+}
+
+.ant-picker-calendar-date:has(.has-clocked){
+  border-top: 2px solid #34a54d !important;
+  background-color: #c6f9ba;
+}

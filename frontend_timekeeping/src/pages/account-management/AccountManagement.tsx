@@ -112,7 +112,7 @@ const AccountManagement: React.FC = () => {
     };
 
     return (
-        <MainLayout>
+        <MainLayout title="Báo cáo thống kê">
             <Button
                 type="primary"
                 icon={<PlusOutlined />}

@@ -14,21 +14,26 @@ import configRoutes from "./routes/configRoutes.js";
 import dayOffTypeRoutes from "./routes/dayOffTypeRoutes.js";
 import authRoutes from "./routes/Auth.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 const app = express();
+
+app.use(cors());
+
 app.use(express.json()); // Middleware để parse JSON request body
 app.use(cookieParser());
 // Định nghĩa các route API
 app.use("/api/auth", authRoutes);
-app.use("/api/staff", staffRoutes);
+app.use("/api/staffs", staffRoutes);
 app.use("/api/shifts", shiftRoutes);
 app.use("/api/dayoffs", dayOffRoutes);
-app.use("/api/timekeeping", timekeepingRoutes);
+app.use("/api/timekeepings", timekeepingRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/positions", positionRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/dayofftypes", dayOffTypeRoutes);
+
 
 // Kiểm tra kết nối database trước khi chạy server
 sequelize

@@ -6,12 +6,12 @@ import { Button, Col, Row, Layout, Typography } from "antd";
 const { Header, } = Layout;
 const { Title, } = Typography;
 
-const HeaderComponent: React.FC = () => {
+const HeaderComponent: React.FC<{ title: string}> = ({ title }) => {
   return (
-    <Header style={{ background: "#fff", padding: 0 }}>
+    <Header style={{ background: "#fff", padding: 0, marginBottom: "16px" }}>
       <Row justify="space-between" align="middle" style={{ padding: "0 16px" }}>
         <Col>
-          <Title level={3}>Tổng quan</Title>
+          <Title level={3}>{ title }</Title>
         </Col>
         <Col>
           <Row align="middle">

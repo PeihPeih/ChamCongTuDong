@@ -22,6 +22,18 @@ export const getStaffById = async (req, res) => {
   }
 };
 
+// Lấy nhân viên theo vị trí
+export const getStaffByPosition = async (req, res) => {
+  try {
+    const staff = await Staff.findAll({
+      where: { PositionID: req.params.positionId },
+    });
+    res.json(staff);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi khi lấy nhân viên" });
+  }
+};
+
 // Thêm nhân viên mới
 export const createStaff = async (req, res) => {
   try {
