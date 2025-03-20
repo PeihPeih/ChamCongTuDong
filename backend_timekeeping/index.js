@@ -1,6 +1,7 @@
 import dotenv from "dotenv"; // Dùng import thay vì require
 import express from "express"; // Dùng import thay vì require
 import sequelize from "./models/index.js"; // Dùng import thay vì require
+import cors from "cors";
 
 // Import tất cả routes
 import staffRoutes from "./routes/StaffRoutes.js";
@@ -17,9 +18,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 const app = express();
-
-app.use(cors());
-
+app.use(cors()); // Thêm middleware CORS
 app.use(express.json()); // Middleware để parse JSON request body
 app.use(cookieParser());
 // Định nghĩa các route API
@@ -33,7 +32,6 @@ app.use("/api/positions", positionRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/dayofftypes", dayOffTypeRoutes);
-
 
 // Kiểm tra kết nối database trước khi chạy server
 sequelize
