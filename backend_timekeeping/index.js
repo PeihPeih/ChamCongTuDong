@@ -15,7 +15,6 @@ import configRoutes from "./routes/configRoutes.js";
 import dayOffTypeRoutes from "./routes/dayOffTypeRoutes.js";
 import authRoutes from "./routes/Auth.js";
 import cookieParser from "cookie-parser";
-import cors from "cors";
 
 const app = express();
 app.use(cors()); // Thêm middleware CORS
