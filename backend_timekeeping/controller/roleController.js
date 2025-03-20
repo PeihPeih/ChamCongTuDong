@@ -116,3 +116,16 @@ export const deleteRole = async (req, res) => {
     res.status(500).json({ error: "Lỗi khi xóa vai trò" });
   }
 };
+
+// Lấy danh sách roles để hiển thị trong dropdown
+export const getRolesForDropdown = async (req, res) => {
+  try {
+    const roles = await Role.findAll({
+      attributes: ["ID", "Name", "Is_default"],
+    });
+    res.json(roles);
+  } catch (error) {
+    console.error("Error in getRolesForDropdown:", error);
+    res.status(500).json({ error: "Lỗi khi lấy danh sách vai trò" });
+  }
+};

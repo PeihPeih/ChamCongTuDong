@@ -17,8 +17,11 @@ const AppRoutes = () => {
       <Route path="/overview" element={<OverView />} />
       <Route path="/timesheet" element={<TimeManagement />} />
       <Route path="/account-management" element={<AccountManagement />} />
-      <Route path="/dayoffs" element={<Dayoffs />} />
-      <Route path="/dayoff-types" element={< DayoffTypes />} />
+      <Route path="/document-management">
+        <Route index element={<Dayoffs />} />{" "}
+        <Route path="dayoffs" element={<Dayoffs />} />{" "}
+        <Route path="dayoff-types" element={<DayoffTypes />} />{" "}
+      </Route>
       <Route path="/account-management">
         <Route index element={<AccountManagement />} />{" "}
         <Route path="role" element={<RoleManagement />} />{" "}

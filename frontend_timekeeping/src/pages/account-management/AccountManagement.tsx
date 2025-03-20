@@ -30,6 +30,8 @@ interface Staff {
   Code: string;
   Email: string;
   Username: string;
+  Gender: string;
+  DayOfBirth: string;
   RoleID: number;
   Role?: { ID: number; Name: string };
   stt?: number;
@@ -134,10 +136,18 @@ const AccountManagement: React.FC = () => {
 
   const showEditModal = (staff: Staff) => {
     setEditingStaff(staff);
+
+    // Định dạng DayOfBirth thành chuỗi YYYY-MM-DD
+    const formattedDayOfBirth = staff.DayOfBirth
+      ? new Date(staff.DayOfBirth).toISOString().split("T")[0]
+      : undefined;
+
     form.setFieldsValue({
       Fullname: staff.Fullname,
       Code: staff.Code,
       Email: staff.Email,
+      Gender: staff.Gender,
+      DayOfBirth: formattedDayOfBirth, // Set giá trị đã định dạng
       Username: staff.Username,
       RoleID: staff.RoleID,
     });
@@ -153,6 +163,8 @@ const AccountManagement: React.FC = () => {
         Email: values.Email,
         Username: values.Username,
         Password: values.Password,
+        Gender: values.Gender,
+        DayOfBirth: values.DayOfBirth,
         ConfirmPassword: values.ConfirmPassword,
         RoleID: values.RoleID,
       };
@@ -359,6 +371,29 @@ const AccountManagement: React.FC = () => {
                     </Option>
                   ))}
                 </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="Gender"
+                label="Giới tính"
+                rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}
+              >
+                <Select placeholder="Chọn giới tính">
+                  <Option value="male">Nam</Option>
+                  <Option value="famale">Nữ</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="DayOfBirth"
+                label="Ngày sinh"
+                rules={[{ required: true, message: "Vui lòng chọn ngày sinh" }]}
+              >
+                <Input type="date" placeholder="Chọn ngày sinh" />
               </Form.Item>
             </Col>
           </Row>

@@ -35,19 +35,6 @@ export const getAllStaff = async (req, res) => {
   }
 };
 
-// Lấy danh sách roles để hiển thị trong dropdown
-export const getRolesForDropdown = async (req, res) => {
-  try {
-    const roles = await Role.findAll({
-      attributes: ["ID", "Name", "Is_default"],
-    });
-    res.json(roles);
-  } catch (error) {
-    console.error("Error in getRolesForDropdown:", error);
-    res.status(500).json({ error: "Lỗi khi lấy danh sách vai trò" });
-  }
-};
-
 // Lấy nhân viên theo ID
 export const getStaffById = async (req, res) => {
   try {
@@ -68,14 +55,16 @@ export const getStaffById = async (req, res) => {
 export const createStaff = async (req, res) => {
   try {
     // Kiểm tra quyền admin (tùy vào logic xác thực của bạn)
-    if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ error: "Không có quyền tạo nhân viên" });
-    }
+    // if (!req.user || req.user.role !== "admin") {
+    //   return res.status(403).json({ error: "Không có quyền tạo nhân viên" });
+    // }
 
     const {
       Fullname,
       Code,
       Email,
+      Gender,
+      DayOfBirth,
       Username,
       Password,
       ConfirmPassword,
@@ -90,6 +79,8 @@ export const createStaff = async (req, res) => {
       !Username ||
       !Password ||
       !ConfirmPassword ||
+      !Gender ||
+      !DayOfBirth ||
       !RoleID
     ) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
@@ -141,6 +132,8 @@ export const createStaff = async (req, res) => {
       Code,
       Email,
       Username,
+      Gender,
+      DayOfBirth,
       Password: hash,
       RoleID,
     });
