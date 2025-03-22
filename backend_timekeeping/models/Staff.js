@@ -13,7 +13,7 @@ const Staff = sequelize.define(
     Username: { type: DataTypes.STRING(255), allowNull: false },
     Password: { type: DataTypes.STRING(255), allowNull: false },
     Gender: { type: DataTypes.STRING(255), allowNull: false },
-    DayOfBirth: { type: DataTypes.DATE, allowNull: false },
+    DayOfBirth: { type: DataTypes.DATE, allowNull: true }, // Changed to true to allow null
     Email: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -30,8 +30,9 @@ const Staff = sequelize.define(
   }
 );
 
-Staff.belongsTo(Position, { foreignKey: "PositionID" });
-Staff.belongsTo(Department, { foreignKey: "DepartmentID" });
-Staff.belongsTo(Role, { foreignKey: "RoleID" });
+// Define relationships with allowNull: true for foreign keys
+Staff.belongsTo(Position, { foreignKey: { name: "PositionID", allowNull: true } });
+Staff.belongsTo(Department, { foreignKey: { name: "DepartmentID", allowNull: true } });
+Staff.belongsTo(Role, { foreignKey: { name: "RoleID", allowNull: true } });
 
 export default Staff; // Sử dụng export default thay vì module.exports

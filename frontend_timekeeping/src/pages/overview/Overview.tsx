@@ -66,7 +66,7 @@ const OverView: React.FC = () => {
                     <Text style={{ display: "block", textAlign: "center", marginBottom: "16px" }}>
                         01/03/2023 - 31/03/2023
                     </Text>
-                    <Calendar dateCellRender={renderDateCell} />
+                    <Calendar cellRender={renderDateCell} />
                 </div>
             </Content>
         </MainLayout>

@@ -1,0 +1,2 @@
+Câu lệnh chạy server Backend:
+npm run dev

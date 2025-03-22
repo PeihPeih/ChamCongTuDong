@@ -3,21 +3,41 @@ import {
   ClockCircleOutlined,
   FileTextOutlined,
   HomeOutlined,
+  LockOutlined,
   LogoutOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu, Typography } from "antd";
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Sidebar.css"; // Import file CSS tùy chỉnh
 
 import "../App.css";
-
 const { Sider } = Layout;
 const { Title } = Typography;
+const API_URL = "http://localhost:3000"
+
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/logout`, {
+        method: "POST"
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   const menuItems = [
     {
@@ -64,10 +84,10 @@ const Sidebar: React.FC = () => {
     },
     {
       key: "6",
-      icon: <LogoutOutlined />,
-      label: <Link to="/logout">Đăng xuất</Link>,
-      path: "/logout",
-    },
+      icon: <LockOutlined />, // Đổi sang icon khóa
+      label: <Link to="/change-password">Đổi mật khẩu</Link>,
+      path: "/change-password",
+    }
   ];
 
   const getSelectedKey = () => {
@@ -138,8 +158,8 @@ const Sidebar: React.FC = () => {
           },
           {
             key: "6",
-            icon: <LogoutOutlined />,
-            label: <Link to="/logout">Đăng xuất</Link>,
+            icon: <LockOutlined />,
+            label: <Link to="/change-password">Đổi mật khẩu</Link>,
           },
         ]}
       />

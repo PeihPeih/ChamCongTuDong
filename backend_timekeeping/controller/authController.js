@@ -28,10 +28,10 @@ export const register = async (req, res) => {
       Password: hash,
       Email: req.body.Email,
       Gender: req.body.Gender,
-      DayOfBirth: req.body.DayOfBirth,
-      PositionID: req.body.PositionID,
-      DepartmentID: req.body.DepartmentID,
-      RoleID: req.body.RoleID,
+      DayOfBirth: req.body.DayOfBirth || null,
+      PositionID: req.body.PositionID || null,
+      DepartmentID: req.body.DepartmentID || null,
+      RoleID: req.body.RoleID || null
     });
 
     await newStaff.save();
@@ -98,6 +98,7 @@ export const login = async (req, res) => {
         },
       });
   } catch (error) {
+    console.log("Error: ", error)
     res.status(500).json({
       success: false,
       message: "Failed to login!",
@@ -107,14 +108,14 @@ export const login = async (req, res) => {
 
 export async function logout(req, res) {
   try {
-    const cookieOptions = {
+    res.clearCookie("accessToken", {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-    };
+    });
 
-    return res.cookie("accessToken", "", cookieOptions).status(200).json({
-      message: "Session out",
+    return res.status(200).json({
+      message: "Đăng xuất thành công",
       success: true,
     });
   } catch (error) {
@@ -124,3 +125,35 @@ export async function logout(req, res) {
     });
   }
 }
+
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Thiếu thông tin!" });
+    }
+
+    const staff = await Staff.findByPk(userId);
+    if (!staff) {
+      return res.status(404).json({ success: false, message: "Người dùng không tồn tại!" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, staff.Password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Mật khẩu cũ không đúng!" });
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(newPassword, salt);
+
+    staff.Password = hashedPassword;
+    await staff.save();
+
+    return res.status(200).json({ success: true, message: "Đổi mật khẩu thành công!" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: `Lỗi: ${error.message}` });
+  }
+};
+

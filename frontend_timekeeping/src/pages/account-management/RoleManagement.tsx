@@ -112,7 +112,7 @@ const RoleManagement: React.FC = () => {
     };
 
     return (
-        <MainLayout>
+        <MainLayout title="">
             <Button
                 type="primary"
                 icon={<PlusOutlined />}
