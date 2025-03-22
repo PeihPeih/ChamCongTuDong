@@ -11,7 +11,6 @@ import { Layout, Menu, Typography } from "antd";
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Sidebar.css"; // Import file CSS tùy chỉnh
-
 import "../App.css";
 const { Sider } = Layout;
 const { Title } = Typography;
@@ -73,8 +72,20 @@ const Sidebar: React.FC = () => {
     {
       key: "4",
       icon: <FileTextOutlined />,
-      label: <Link to="/document-management">Quản lý đơn từ</Link>,
+      label: "Quản lý đơn từ",
       path: "/document-management",
+      children: [
+        {
+          key: "4-1",
+          label: <Link to="/document-management/Dayoffs">Danh sách đơn từ</Link>,
+          path: "/document-management/Dayoffs",
+        },
+        {
+          key: "4-2",
+          label: <Link to="/document-management/Dayoff-types">Loại đơn từ</Link>,
+          path: "/document-management/Dayoff-types",
+        },
+      ],
     },
     {
       key: "5",
@@ -91,20 +102,26 @@ const Sidebar: React.FC = () => {
   ];
 
   const getSelectedKey = () => {
+    // Kiểm tra các menu con trước
     for (const item of menuItems) {
-      if (item.path === location.pathname) return item.key;
       if (item.children) {
         for (const child of item.children) {
-          if (child.path === location.pathname) return child.key;
+          if (child.path === location.pathname) {
+            return child.key; // Trả về key của menu con nếu khớp
+          }
         }
       }
+      // Kiểm tra menu cha
+      if (item.path === location.pathname) {
+        return item.key; // Trả về key của menu cha nếu khớp
+      }
     }
-    return "1";
+    return "1"; // Mặc định là "Tổng quan"
   };
 
   const openKeys = menuItems
-    .filter(item => item.children?.some(child => child.path === location.pathname))
-    .map(item => item.key);
+    .filter((item) => item.children?.some((child) => child.path === location.pathname))
+    .map((item) => item.key);
 
   return (
     <Sider width={300} style={{ background: "#208f39" }}>
@@ -120,48 +137,7 @@ const Sidebar: React.FC = () => {
         defaultOpenKeys={openKeys}
         style={{ background: "#208f39" }}
         className="sidebar-menu"
-        items={[
-          {
-            key: "1",
-            icon: <HomeOutlined />,
-            label: <Link to="/overview">Tổng quan</Link>, // Thêm href bằng Link
-          },
-          {
-            key: "2",
-            icon: <UserOutlined />,
-            label: <Link to="/account-management">Quản lý tài khoản</Link>,
-          },
-          {
-            key: "3",
-            icon: <ClockCircleOutlined />,
-            label: <Link to="/timesheet">Quản lý chấm công</Link>,
-          },
-          {
-            key: "4",
-            icon: <FileTextOutlined />,
-            label: "Đơn từ",
-            children: [
-              {
-                key: "4-1",
-                label: <Link to="/Dayoffs">Danh sách đơn từ</Link>,
-              },
-              {
-                key: "4-2",
-                label: <Link to="/Dayoff-types">Loại đơn từ</Link>,
-              },
-            ],
-          },
-          {
-            key: "5",
-            icon: <BarChartOutlined />,
-            label: <Link to="/reports">Báo cáo thống kê</Link>,
-          },
-          {
-            key: "6",
-            icon: <LockOutlined />,
-            label: <Link to="/change-password">Đổi mật khẩu</Link>,
-          },
-        ]}
+        items={menuItems}
       />
     </Sider>
   );

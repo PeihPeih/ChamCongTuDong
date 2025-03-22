@@ -6,9 +6,11 @@ import {
   getAllRoles,
   getRoleById,
   updateRole,
+  getRolesForDropdown
 } from "../controller/roleController.js";
 
 router.get("/", getAllRoles);
+router.get("/dropdown", getRolesForDropdown);
 router.get("/:id", getRoleById);
 router.post("/", createRole);
 router.put("/:id", updateRole);

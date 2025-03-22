@@ -1,11 +1,36 @@
 import Staff from "../models/Staff.js";
+import Role from "../models/Role.js";
+import bcrypt from "bcrypt";
+import { Op } from "sequelize";
 
 // Lấy danh sách nhân viên
 export const getAllStaff = async (req, res) => {
   try {
-    const staff = await Staff.findAll();
-    res.json(staff);
+    const { name, page = 1, pageSize = 10 } = req.query;
+
+    const whereClause = name ? { Fullname: { [Op.like]: `%${name}%` } } : {};
+    const limit = parseInt(pageSize, 10);
+    const offset = (parseInt(page, 10) - 1) * limit;
+
+    const { count, rows } = await Staff.findAndCountAll({
+      where: whereClause,
+      include: [
+        { model: Role, attributes: ["ID", "Name"] }, // Lấy thông tin Role
+      ],
+      limit,
+      offset,
+    });
+
+    res.json({
+      data: rows,
+      pagination: {
+        total: count,
+        page: parseInt(page, 10),
+        pageSize: limit,
+      },
+    });
   } catch (error) {
+    console.error("Error in getAllStaff:", error);
     res.status(500).json({ error: "Lỗi khi lấy danh sách nhân viên" });
   }
 };
@@ -13,23 +38,15 @@ export const getAllStaff = async (req, res) => {
 // Lấy nhân viên theo ID
 export const getStaffById = async (req, res) => {
   try {
-    const staff = await Staff.findByPk(req.params.id);
-    if (!staff)
-      return res.status(404).json({ error: "Không tìm thấy nhân viên" });
-    res.json(staff);
-  } catch (error) {
-    res.status(500).json({ error: "Lỗi khi lấy nhân viên" });
-  }
-};
-
-// Lấy nhân viên theo vị trí
-export const getStaffByPosition = async (req, res) => {
-  try {
-    const staff = await Staff.findAll({
-      where: { PositionID: req.params.positionId },
+    const staff = await Staff.findByPk(req.params.id, {
+      include: [{ model: Role, attributes: ["ID", "Name"] }],
     });
+    if (!staff) {
+      return res.status(404).json({ error: "Không tìm thấy nhân viên" });
+    }
     res.json(staff);
   } catch (error) {
+    console.error("Error in getStaffById:", error);
     res.status(500).json({ error: "Lỗi khi lấy nhân viên" });
   }
 };
@@ -37,38 +54,72 @@ export const getStaffByPosition = async (req, res) => {
 // Thêm nhân viên mới
 export const createStaff = async (req, res) => {
   try {
-    // Kiểm tra xem người dùng có phải là admin không (bạn có thể thay đổi logic tùy vào cách xác thực)
-    if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ error: "Không có quyền tạo nhân viên" });
-    }
+    // Kiểm tra quyền admin (tùy vào logic xác thực của bạn)
+    // if (!req.user || req.user.role !== "admin") {
+    //   return res.status(403).json({ error: "Không có quyền tạo nhân viên" });
+    // }
 
-    // Kiểm tra dữ liệu đầu vào (validate dữ liệu)
     const {
       Fullname,
       Code,
       Email,
-      Username,
-      Password,
       Gender,
       DayOfBirth,
-      PositionID,
-      DepartmentID,
+      Username,
+      Password,
+      ConfirmPassword,
       RoleID,
     } = req.body;
 
+    // Validate dữ liệu đầu vào
     if (
       !Fullname ||
       !Code ||
       !Email ||
       !Username ||
       !Password ||
+      !ConfirmPassword ||
       !Gender ||
       !DayOfBirth ||
-      !PositionID ||
-      !DepartmentID ||
       !RoleID
     ) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
+    }
+
+    // Kiểm tra email hợp lệ
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(Email)) {
+      return res.status(400).json({ error: "Email không hợp lệ" });
+    }
+
+    // Kiểm tra username đã tồn tại
+    const existingUsername = await Staff.findOne({ where: { Username } });
+    if (existingUsername) {
+      return res.status(400).json({ error: "Username đã tồn tại" });
+    }
+
+    // Kiểm tra email đã tồn tại
+    const existingEmail = await Staff.findOne({ where: { Email } });
+    if (existingEmail) {
+      return res.status(400).json({ error: "Email đã tồn tại" });
+    }
+
+    // Kiểm tra password và confirm password
+    if (Password !== ConfirmPassword) {
+      return res.status(400).json({ error: "Mật khẩu xác nhận không khớp" });
+    }
+
+    // Kiểm tra độ dài mật khẩu
+    if (Password.length < 6) {
+      return res
+        .status(400)
+        .json({ error: "Mật khẩu phải có ít nhất 6 ký tự" });
+    }
+
+    // Kiểm tra RoleID có tồn tại
+    const role = await Role.findByPk(RoleID);
+    if (!role) {
+      return res.status(400).json({ error: "Vai trò không tồn tại" });
     }
 
     // Băm mật khẩu
@@ -81,18 +132,15 @@ export const createStaff = async (req, res) => {
       Code,
       Email,
       Username,
-      Password: hash,
       Gender,
       DayOfBirth,
-      PositionID,
-      DepartmentID,
+      Password: hash,
       RoleID,
     });
 
-    // Trả về nhân viên mới đã được tạo
     res.status(201).json(newStaff);
   } catch (error) {
-    console.error(error);
+    console.error("Error in createStaff:", error);
     res.status(500).json({ error: "Lỗi khi tạo nhân viên" });
   }
 };
@@ -101,12 +149,81 @@ export const createStaff = async (req, res) => {
 export const updateStaff = async (req, res) => {
   try {
     const staff = await Staff.findByPk(req.params.id);
-    if (!staff)
+    if (!staff) {
       return res.status(404).json({ error: "Không tìm thấy nhân viên" });
+    }
 
-    await staff.update(req.body);
+    const {
+      Fullname,
+      Code,
+      Email,
+      Username,
+      Password,
+      ConfirmPassword,
+      RoleID,
+    } = req.body;
+
+    // Validate dữ liệu đầu vào
+    if (!Fullname || !Code || !Email || !Username || !RoleID) {
+      return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
+    }
+
+    // Kiểm tra email hợp lệ
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(Email)) {
+      return res.status(400).json({ error: "Email không hợp lệ" });
+    }
+
+    // Kiểm tra username đã tồn tại (trừ bản ghi hiện tại)
+    const existingUsername = await Staff.findOne({
+      where: { Username, ID: { [Op.ne]: req.params.id } },
+    });
+    if (existingUsername) {
+      return res.status(400).json({ error: "Username đã tồn tại" });
+    }
+
+    // Kiểm tra email đã tồn tại (trừ bản ghi hiện tại)
+    const existingEmail = await Staff.findOne({
+      where: { Email, ID: { [Op.ne]: req.params.id } },
+    });
+    if (existingEmail) {
+      return res.status(400).json({ error: "Email đã tồn tại" });
+    }
+
+    // Kiểm tra RoleID có tồn tại
+    const role = await Role.findByPk(RoleID);
+    if (!role) {
+      return res.status(400).json({ error: "Vai trò không tồn tại" });
+    }
+
+    // Nếu có cập nhật mật khẩu
+    let updatedPassword = staff.Password;
+    if (Password) {
+      if (Password !== ConfirmPassword) {
+        return res.status(400).json({ error: "Mật khẩu xác nhận không khớp" });
+      }
+      if (Password.length < 6) {
+        return res
+          .status(400)
+          .json({ error: "Mật khẩu phải có ít nhất 6 ký tự" });
+      }
+      const salt = bcrypt.genSaltSync(10);
+      updatedPassword = bcrypt.hashSync(Password, salt);
+    }
+
+    // Cập nhật nhân viên
+    await staff.update({
+      Fullname,
+      Code,
+      Email,
+      Username,
+      Password: updatedPassword,
+      RoleID,
+    });
+
     res.json(staff);
   } catch (error) {
+    console.error("Error in updateStaff:", error);
     res.status(500).json({ error: "Lỗi khi cập nhật nhân viên" });
   }
 };
@@ -115,12 +232,14 @@ export const updateStaff = async (req, res) => {
 export const deleteStaff = async (req, res) => {
   try {
     const staff = await Staff.findByPk(req.params.id);
-    if (!staff)
+    if (!staff) {
       return res.status(404).json({ error: "Không tìm thấy nhân viên" });
+    }
 
     await staff.destroy();
     res.json({ message: "Xóa nhân viên thành công" });
   } catch (error) {
+    console.error("Error in deleteStaff:", error);
     res.status(500).json({ error: "Lỗi khi xóa nhân viên" });
   }
 };
