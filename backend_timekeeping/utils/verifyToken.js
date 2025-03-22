@@ -3,30 +3,17 @@ import Staff from "../models/Staff.js";
 import Role from "../models/Role.js";
 
 export const verifyToken = (req, res, next) => {
-  try {
-    const token = req.cookies.accessToken;
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "You are not authorized!",
-      });
-    }
+  const token = req.headers.authorization?.split(" ")[1]; // Lấy token từ `Bearer <token>`
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Unauthorized!" });
+  }
 
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-      if (err) {
-        return res.status(401).json({
-          success: false,
-          message: "Token is invalid!",
-        });
-      }
-      req.user = user;
-      next();
-    });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    req.user = decoded; // Thêm thông tin user vào request
+    next();
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: `Server error: ${error.message}`,
-    });
+    return res.status(403).json({ success: false, message: "Token không hợp lệ!" });
   }
 };
 

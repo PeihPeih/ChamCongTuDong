@@ -2,6 +2,7 @@ import styles from "./LoginPage.module.css";
 
 interface InputFieldProps {
     type: string;
+    name: string;
     placeholder: string;
     required?: boolean;
     value: string;
@@ -10,6 +11,7 @@ interface InputFieldProps {
 
 const InputField: React.FC<InputFieldProps> = ({
     type,
+    name,
     placeholder,
     required = false,
     value,
@@ -19,6 +21,7 @@ const InputField: React.FC<InputFieldProps> = ({
         <div className={styles.inputContainer}>
             <input
                 type={type}
+                name={name}
                 placeholder={placeholder}
                 className={styles.input}
                 value={value}

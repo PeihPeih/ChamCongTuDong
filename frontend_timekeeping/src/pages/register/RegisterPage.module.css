@@ -1,5 +1,5 @@
 /* Tổng thể trang */
-.loginContainer {
+.registerContainer {
     height: 100vh;
     background: linear-gradient(135deg, #00a651, #008040);
     display: flex;
@@ -116,7 +116,7 @@ body {
 }
 
 /* Login button */
-.loginButton {
+.registerButton {
     cursor: pointer;
     color: #fff;
     background-color: #00a651;
@@ -127,9 +127,10 @@ body {
     font-weight: 600;
     transition: all 0.3s ease-in-out;
     border: none;
+    margin-top: 4px;
 }
 
-.loginButton:hover {
+.registerButton:hover {
     background-color: #008040;
     box-shadow: 0px 4px 8px rgba(0, 128, 64, 0.3);
 }
@@ -150,4 +151,36 @@ body {
 .forgotPassword:hover {
     background-color: #008040;
     box-shadow: 0px 4px 8px rgba(0, 128, 64, 0.3);
+}
+
+.selectInput {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 2px solid #00a651;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Khi hover vào select */
+.selectInput:hover {
+    border-color: #008a42;
+}
+
+/* Khi focus vào select */
+.selectInput:focus {
+    border-color: #008a42;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 166, 81, 0.5);
+}
+
+/* Style cho option */
+.selectInput option {
+    font-size: 16px;
+    background: white;
+    color: #333;
+    padding: 10px;
 }
