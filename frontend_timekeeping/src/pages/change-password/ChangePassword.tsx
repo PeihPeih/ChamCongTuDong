@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import styles from "./ChangePassword.module.css";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
-
-const API_URL = "http://localhost:3000"; // Cập nhật theo API của bạn
+import { API_URL } from "../../config/index";
 
 const ChangePassword: React.FC = () => {
     const [oldPassword, setOldPassword] = useState("");

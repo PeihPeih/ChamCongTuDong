@@ -2,11 +2,10 @@ import { BellOutlined, LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Col, Row, Layout, Typography, Dropdown, Menu, Space } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config/index";
 
 const { Header } = Layout;
 const { Title } = Typography;
-
-const API_URL = "http://localhost:3000"
 
 type User = {
   id: string;

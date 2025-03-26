@@ -2,11 +2,10 @@ import { CloseOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-
 import { Button, Col, Form, Input, Layout, Modal, Row, Space, Table, Typography, InputNumber } from "antd";
 import React, { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
+import { API_URL } from "../../config/index";
 
 const { Content } = Layout;
 const { Title } = Typography;
-
-const API_URL = `${process.env.REACT_APP_BACKEND_HOST}:${process.env.REACT_APP_BACKEND_PORT}`;
 
 interface DayoffType {
   ID?: string; 

@@ -10,11 +10,11 @@ import {
 import { Layout, Menu, Typography } from "antd";
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { API_URL } from "../config/index";
 import "./Sidebar.css"; // Import file CSS tùy chỉnh
 import "../App.css";
 const { Sider } = Layout;
 const { Title } = Typography;
-const API_URL = "http://localhost:3000"
 
 
 const Sidebar: React.FC = () => {
@@ -66,8 +66,8 @@ const Sidebar: React.FC = () => {
     {
       key: "3",
       icon: <ClockCircleOutlined />,
-      label: <Link to="/time-management">Quản lý chấm công</Link>,
-      path: "/time-management",
+      label: <Link to="/timesheet">Quản lý chấm công</Link>,
+      path: "/timesheet",
     },
     {
       key: "4",
@@ -77,13 +77,13 @@ const Sidebar: React.FC = () => {
       children: [
         {
           key: "4-1",
-          label: <Link to="/document-management/Dayoffs">Danh sách đơn từ</Link>,
-          path: "/document-management/Dayoffs",
+          label: <Link to="/Dayoffs">Danh sách đơn từ</Link>,
+          path: "/Dayoffs",
         },
         {
           key: "4-2",
-          label: <Link to="/document-management/Dayoff-types">Loại đơn từ</Link>,
-          path: "/document-management/Dayoff-types",
+          label: <Link to="/Dayoff-types">Loại đơn từ</Link>,
+          path: "/Dayoff-types",
         },
       ],
     },

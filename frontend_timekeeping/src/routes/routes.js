@@ -26,8 +26,11 @@ const AppRoutes = () => {
         <Route path="/overview" element={<OverView />} />
         <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/timesheet" element={<TimeManagement />} />
-        <Route path="/dayoffs" element={<Dayoffs />} />
-        <Route path="/dayoff-types" element={<DayoffTypes />} />
+        <Route>
+          <Route path="/dayoffs" element={<Dayoffs />} />
+          <Route path="/dayoff-types" element={<DayoffTypes />} />
+        </Route>
+
         <Route path="/reports" element={<Reports />} />
 
         {/* Nested routes */}

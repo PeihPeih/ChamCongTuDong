@@ -5,11 +5,10 @@ import MainLayout from "../../layouts/MainLayout";
 import '../../App.css';
 import moment from 'moment';
 import { useState, useEffect } from "react";
+import { API_URL } from "../../config/index";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
-
-const API_URL = `${process.env.REACT_APP_BACKEND_HOST}:${process.env.REACT_APP_BACKEND_PORT}`;
 
 interface Timekeeping {
     ID: number;

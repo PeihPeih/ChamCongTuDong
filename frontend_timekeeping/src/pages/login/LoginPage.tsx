@@ -5,11 +5,9 @@ import InputField from "./InputField";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/systemSlice"; // Điều chỉnh đường dẫn nếu cần
+import { API_URL } from "../../config/index";
 
 // const env = (import.meta as any).env;
-// const API_URL = `${env.VITE_BACKEND_HOST}:${env.VITE_BACKEND_PORT}`;
-const API_URL = "http://localhost:3000"
-
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

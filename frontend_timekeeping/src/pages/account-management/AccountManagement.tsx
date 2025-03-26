@@ -22,6 +22,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import MainLayout from "../../layouts/MainLayout";
 import { ColumnType } from "antd/es/table";
+import { API_URL } from "../../config/index";
 
 // Định nghĩa kiểu cho Staff
 interface Staff {
@@ -62,13 +63,11 @@ const AccountManagement: React.FC = () => {
   });
   const [notificationApi, contextHolder] = notification.useNotification();
 
-  const REACT_APP_SERVER_URL = process.env.REACT_APP_SERVER_URL || "http://localhost:3000";
-
   // Lấy danh sách nhân viên
   const fetchStaffs = async (search?: string, page = 1, pageSize = 10) => {
     try {
-      console.log("Fetching staffs from:", `${REACT_APP_SERVER_URL}/api/staffs`);
-      const response = await axios.get(`${REACT_APP_SERVER_URL}/api/staffs`, {
+      console.log("Fetching staffs from:", `${API_URL}/api/staffs`);
+      const response = await axios.get(`${API_URL}/api/staffs`, {
         params: { name: search, page, pageSize },
       });
       const { data, pagination: paginationData } = response.data;
@@ -97,7 +96,7 @@ const AccountManagement: React.FC = () => {
   // Lấy danh sách roles cho dropdown
   const fetchRoles = async () => {
     try {
-      const response = await axios.get(`${REACT_APP_SERVER_URL}/api/roles/dropdown`);
+      const response = await axios.get(`${API_URL}/api/roles/dropdown`);
       setRoles(response.data);
     } catch (error: any) {
       console.error("Error fetching roles:", error);
@@ -171,7 +170,7 @@ const AccountManagement: React.FC = () => {
 
       if (editingStaff) {
         const response = await axios.put<Staff>(
-          `${REACT_APP_SERVER_URL}/api/staffs/${editingStaff.ID}`,
+          `${API_URL}/api/staffs/${editingStaff.ID}`,
           payload
         );
         setStaffs(
@@ -185,7 +184,7 @@ const AccountManagement: React.FC = () => {
           placement: "topRight",
         });
       } else {
-        const response = await axios.post<Staff>(`${REACT_APP_SERVER_URL}/api/staffs`, payload);
+        const response = await axios.post<Staff>(`${API_URL}/api/staffs`, payload);
         setStaffs([...staffs, { ...response.data, stt: staffs.length + 1, key: response.data.ID }]);
         notificationApi.success({
           message: "Thêm nhân viên",
@@ -207,7 +206,7 @@ const AccountManagement: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`${REACT_APP_SERVER_URL}/api/staffs/${id}`);
+      await axios.delete(`${API_URL}/api/staffs/${id}`);
       const deletedStaff = staffs.find((staff) => staff.ID === id);
       setStaffs(staffs.filter((staff) => staff.ID !== id));
       notificationApi.success({

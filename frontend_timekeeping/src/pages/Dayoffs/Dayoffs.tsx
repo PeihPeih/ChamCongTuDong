@@ -5,12 +5,13 @@ import MainLayout from "../../layouts/MainLayout";
 import { formatDate } from "../../utils/DateUtils";
 import moment from "moment";
 import { DATE_FORMAT } from "../../utils/DateUtils";
+import { API_URL } from "../../config/index";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-const API_URL = `${process.env.REACT_APP_BACKEND_HOST}:${process.env.REACT_APP_BACKEND_PORT}`;
+
 const employeeId = 3;
 const managerId = 2;
 

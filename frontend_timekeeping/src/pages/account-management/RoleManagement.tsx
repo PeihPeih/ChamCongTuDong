@@ -23,6 +23,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import MainLayout from "../../layouts/MainLayout";
 import { ColumnType } from "antd/es/table";
+import { API_URL } from "../../config/index";
 
 // Định nghĩa kiểu cho Role
 interface Role {
@@ -48,12 +49,10 @@ const RoleManagement: React.FC = () => {
     });
     const [notificationApi, contextHolder] = notification.useNotification();
 
-    const REACT_APP_SERVER_URL = process.env.REACT_APP_SERVER_URL || "http://localhost:3000";
-
     const fetchRoles = async (search?: string, page = 1, pageSize = 10) => {
         try {
-            console.log("Fetching roles from:", `${REACT_APP_SERVER_URL}/api/roles`);
-            const response = await axios.get(`${REACT_APP_SERVER_URL}/api/roles`, {
+            console.log("Fetching roles from:", `${API_URL}/api/roles`);
+            const response = await axios.get(`${API_URL}/api/roles`, {
                 params: { name: search, page, pageSize },
             });
             const { data, pagination: paginationData } = response.data;
@@ -117,7 +116,7 @@ const RoleManagement: React.FC = () => {
 
             if (editingRole) {
                 const response = await axios.put<Role>(
-                    `${REACT_APP_SERVER_URL}/api/roles/${editingRole.ID}`,
+                    `${API_URL}/api/roles/${editingRole.ID}`,
                     payload
                 );
                 setRoles(
@@ -131,7 +130,7 @@ const RoleManagement: React.FC = () => {
                     placement: "topRight",
                 });
             } else {
-                const response = await axios.post<Role>(`${REACT_APP_SERVER_URL}/api/roles`, payload);
+                const response = await axios.post<Role>(`${API_URL}/api/roles`, payload);
                 setRoles([...roles, { ...response.data, stt: roles.length + 1, key: response.data.ID }]);
                 notificationApi.success({
                     message: "Thêm vai trò",
@@ -153,7 +152,7 @@ const RoleManagement: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         try {
-            await axios.delete(`${REACT_APP_SERVER_URL}/api/roles/${id}`);
+            await axios.delete(`${API_URL}/api/roles/${id}`);
             const deletedRole = roles.find((role) => role.ID === id);
             setRoles(roles.filter((role) => role.ID !== id));
             notificationApi.success({

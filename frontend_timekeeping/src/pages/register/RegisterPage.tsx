@@ -3,10 +3,7 @@ import styles from "./RegisterPage.module.css";
 import PasswordField from "../login/PasswordField";
 import InputField from "../login/InputField";
 import { useNavigate } from "react-router-dom";
-
-// const env = (import.meta as any).env;
-// const API_URL = `${env.VITE_BACKEND_HOST}:${env.VITE_BACKEND_PORT}`;
-const API_URL = "http://localhost:3000"
+import { API_URL } from "../../config/index";
 
 function RegisterPage() {
     const [formData, setFormData] = useState({
