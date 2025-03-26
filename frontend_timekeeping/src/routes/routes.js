@@ -12,6 +12,7 @@ import RoleManagement from "../pages/account-management/RoleManagement"; // Giáº
 import RegisterPage from "../pages/register/RegisterPage";
 import ProtectedRoute from "./protectedRoute";
 import ChangePassword from "../pages/change-password/ChangePassword";
+import ShiftManagement from "../pages/shift/ShiftManagement";
 
 const AppRoutes = () => {
   return (
@@ -32,7 +33,7 @@ const AppRoutes = () => {
         </Route>
 
         <Route path="/reports" element={<Reports />} />
-
+        <Route path="/shift-management" element={<ShiftManagement />} />
         {/* Nested routes */}
         <Route path="/account-management">
           <Route index element={<AccountManagement />} />
