@@ -2,6 +2,7 @@ import {
   ApartmentOutlined,
   BarChartOutlined,
   CameraOutlined,
+  CalendarOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
   HomeOutlined,
@@ -111,12 +112,18 @@ const Sidebar: React.FC = () => {
     },
     {
       key: "5",
+      icon: <CalendarOutlined />,
+      label: <Link to="/shift-management">Quản lý ca làm việc</Link>,
+      path: "/shift-management",
+    },
+    {
+      key: "6",
       icon: <BarChartOutlined />,
       label: <Link to="/reports">Báo cáo thống kê</Link>,
       path: "/reports",
     },
     {
-      key: "6",
+      key: "7",
       icon: <LockOutlined />, // Đổi sang icon khóa
       label: <Link to="/change-password">Đổi mật khẩu</Link>,
       path: "/change-password",

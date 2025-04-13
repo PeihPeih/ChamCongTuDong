@@ -15,8 +15,12 @@ import RoleManagement from "../pages/Agency/RoleManagement"; // Giả định
 import RegisterPage from "../pages/register/RegisterPage";
 import ProtectedRoute from "./protectedRoute";
 import ChangePassword from "../pages/change-password/ChangePassword";
+<<<<<<< HEAD
 import ImageCapture from "../pages/image-capture/ImageCapture";
 
+=======
+import ShiftManagement from "../pages/shift/ShiftManagement";
+>>>>>>> 4084a0761ab0c92cd8fa7d4ca5f3958b3687a553
 
 const AppRoutes = () => {
   return (
@@ -36,7 +40,7 @@ const AppRoutes = () => {
           <Route path="/dayoff-types" element={<DayoffTypes />} />
         </Route>
         <Route path="/reports" element={<Reports />} />
-
+        <Route path="/shift-management" element={<ShiftManagement />} />
         {/* Nested routes */}
         <Route>
           <Route index element={<Departments />} />

@@ -31,8 +31,12 @@ const Staff = sequelize.define(
 );
 
 // Define relationships with allowNull: true for foreign keys
-Staff.belongsTo(Position, { foreignKey: { name: "PositionID", allowNull: true } });
-Staff.belongsTo(Department, { foreignKey: { name: "DepartmentID", allowNull: true } });
+Staff.belongsTo(Position, {
+  foreignKey: { name: "PositionID", allowNull: true },
+});
+Staff.belongsTo(Department, {
+  foreignKey: { name: "DepartmentID", allowNull: true },
+});
 Staff.belongsTo(Role, { foreignKey: { name: "RoleID", allowNull: true } });
-
+// sequelize.sync({ force: true });
 export default Staff; // Sử dụng export default thay vì module.exports

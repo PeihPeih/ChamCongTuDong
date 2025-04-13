@@ -15,7 +15,15 @@ export const getAllStaff = async (req, res) => {
   try {
     const { name, page = 1, pageSize = 10 } = req.query;
 
-    const whereClause = name ? { Fullname: { [Op.like]: `%${name}%` } } : {};
+    const whereClause = name
+      ? {
+        [Op.or]: [
+        { Fullname: { [Op.like]: `%${name}%` } },
+        { Code: { [Op.like]: `%${name}%` } },
+        { Email: { [Op.like]: `%${name}%` } },
+        ],
+      }
+      : {};
     const limit = parseInt(pageSize, 10);
     const offset = (parseInt(page, 10) - 1) * limit;
 

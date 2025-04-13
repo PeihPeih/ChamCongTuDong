@@ -282,7 +282,7 @@ const AccountManagement: React.FC = () => {
         <Col span={6}></Col>
         <Col span={12}>
           <Input
-            placeholder="Tìm kiếm theo tên"
+            placeholder="Tìm kiếm theo tên, mã nhân viên, email"
             value={searchValue}
             onChange={(e) => handleSearch(e.target.value)}
             prefix={<SearchOutlined />}
@@ -322,7 +322,7 @@ const AccountManagement: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
                 name="Fullname"
                 label="Họ và tên"
@@ -331,7 +331,7 @@ const AccountManagement: React.FC = () => {
                 <Input placeholder="Nhập Họ và tên nhân viên" />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            {/* <Col span={12}>
               <Form.Item
                 name="RoleID"
                 label="Nguời tạo"
@@ -345,7 +345,7 @@ const AccountManagement: React.FC = () => {
                   ))}
                 </Select>
               </Form.Item>
-            </Col>
+            </Col> */}
           </Row>
           <Row gutter={16}>
             <Col span={12}>
