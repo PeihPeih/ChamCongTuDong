@@ -1,8 +1,8 @@
-import { DataTypes } from "sequelize"; // Dùng import thay vì require
-import sequelize from "../models/index.js"; // Dùng import thay vì require
-import Position from "./Position.js"; // Dùng import thay vì require
-import Department from "./Department.js"; // Dùng import thay vì require
-import Role from "./Role.js"; // Dùng import thay vì require
+import { DataTypes } from "sequelize"; 
+import sequelize from "../models/index.js"; 
+import Position from "./Position.js"; 
+import Department from "./Department.js"; 
+import Role from "./Role.js"; 
 
 const Staff = sequelize.define(
   "Staff",
@@ -17,7 +17,7 @@ const Staff = sequelize.define(
     Email: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      unique: true,
+      unique: "email_unique",
       validate: {
         isEmail: true, // Kiểm tra xem có phải định dạng email hợp lệ không
       },

@@ -9,7 +9,7 @@ const Shift = sequelize.define(
     Time_in: { type: DataTypes.STRING(255), allowNull: false },
     Time_out: { type: DataTypes.STRING(255), allowNull: false },
     Is_default: { type: DataTypes.INTEGER, allowNull: false },
-    Type_shift: { type: DataTypes.STRING(255), allowNull: false },
+    Type_shift: { type: DataTypes.INTEGER, allowNull: false }, // 1. Ca ngày, 2. Ca đêm
     Start_date: { type: DataTypes.DATE, allowNull: false },
     Total_time: { type: DataTypes.STRING(255), allowNull: false },
   },

@@ -1,5 +1,7 @@
 import {
+  ApartmentOutlined,
   BarChartOutlined,
+  CameraOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
   HomeOutlined,
@@ -46,28 +48,48 @@ const Sidebar: React.FC = () => {
       path: "/overview",
     },
     {
-      key: "2",
-      icon: <UserOutlined />,
-      label: "Quản lý tài khoản",
-      path: "/account-management",
-      children: [
-        {
-          key: "2-1",
-          label: <Link to="/account-management/role">Role</Link>,
-          path: "/account-management/role",
-        },
-        {
-          key: "2-2",
-          label: <Link to="/account-management/account">Account</Link>,
-          path: "/account-management/account",
-        },
-      ],
-    },
-    {
       key: "3",
       icon: <ClockCircleOutlined />,
       label: <Link to="/timesheet">Quản lý chấm công</Link>,
       path: "/timesheet",
+    },
+    {
+      key: "2",
+      icon: <ApartmentOutlined />,
+      label: "Cơ quan",
+      children: [
+        {
+          key: "2-1",
+          label: <Link to="/departments">Phòng ban</Link>,
+          path: "/departments",
+        },
+        {
+          key: "2-2",
+          label: <Link to="/positions">Chức vụ</Link>,
+          path: "/positions",
+        },
+        {
+          key: "2-3",
+          label: <Link to="/shifts">Ca làm</Link>,
+          path: "/shifts"
+        },
+        {
+          key: "2-4",
+          label: <Link to="/staffs">Người dùng</Link>,
+          path: "/staffs",
+        },
+        {
+          key: "2-5",
+          label: <Link to="/roles">Quyền</Link>,
+          path: "/roles",
+        },
+      ],
+    },
+    {
+      key: "7",
+      icon: <CameraOutlined />,
+      label: <Link to="/staff/image-capture">Lấy mẫu khuôn mặt</Link>,
+      path: "/staff/image-capture",
     },
     {
       key: "4",

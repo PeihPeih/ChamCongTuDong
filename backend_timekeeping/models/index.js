@@ -18,7 +18,7 @@ const sequelize = new Sequelize(
 // Kiểm tra kết nối với MySQL
 sequelize
   .authenticate()
-  .then(() => console.log("Kết nối cơ sở dữ liệu thành công!"))
+  .then(() => console.log("-------- Kết nối CSDL ---------"))
   .catch((err) => console.error("Lỗi kết nối cơ sở dữ liệu:", err));
 
 export default sequelize; // Sử dụng export default thay vì module.exports
