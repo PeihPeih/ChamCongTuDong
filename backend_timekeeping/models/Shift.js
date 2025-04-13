@@ -11,9 +11,9 @@ const Shift = sequelize.define(
     Start_time_of: { type: DataTypes.STRING(255), allowNull: false }, // Thời gian bắt đầu nghỉ trưa
     End_time_of: { type: DataTypes.STRING(255), allowNull: false }, // Thời gian kết thúc nghỉ trưa
     Is_default: { type: DataTypes.INTEGER, allowNull: false },
-    Type_shift: { type: DataTypes.STRING(255), allowNull: false }, // Ca sáng - 1 , Ca tối - 2
-    Start_date: { type: DataTypes.DATE, allowNull: false }, // Ngày bắt đầu
-    Total_time: { type: DataTypes.STRING(255), allowNull: false }, // Tổng thời gian làm việc
+    Type_shift: { type: DataTypes.INTEGER, allowNull: false }, // 1. Ca ngày, 2. Ca đêm
+    Start_date: { type: DataTypes.DATE, allowNull: false },
+    Total_time: { type: DataTypes.STRING(255), allowNull: false },
   },
   { timestamps: false }
 );

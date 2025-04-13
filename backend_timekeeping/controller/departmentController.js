@@ -2,8 +2,25 @@ import Department from "../models/Department.js";
 
 export const getAllDepartments = async (req, res) => {
   try {
-    const departments = await Department.findAll();
-    res.json(departments);
+    const { name, page = 1, pageSize = 10 } = req.query; // Lấy query params: name, page, pageSize
+    const whereClause = name ? { Name: { [Op.like]: `%${name}%` } } : {};
+    const limit = parseInt(pageSize, 10);
+    const offset = (parseInt(page, 10) - 1) * limit;
+
+    const { count, rows } = await Department.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+    });
+
+    res.json({
+      data: rows,
+      pagination: {
+        total: count,
+        page: parseInt(page, 10),
+        pageSize: limit,
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Lỗi khi lấy danh sách phòng ban" });
   }

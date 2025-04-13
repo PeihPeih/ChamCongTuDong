@@ -26,21 +26,20 @@ import { ColumnType } from "antd/es/table";
 import { API_URL } from "../../config/index";
 
 // Định nghĩa kiểu cho Role
-interface Role {
+interface Position {
     ID: number;
     Name: string;
-    Is_default: number;
     stt?: number;
     key?: number;
 }
 
 const { Content } = Layout;
 
-const RoleManagement: React.FC = () => {
-    const [roles, setRoles] = useState<Role[]>([]);
+const Position: React.FC = () => {
+    const [positions, setPositions] = useState<Position[]>([]);
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
     const [form] = Form.useForm();
-    const [editingRole, setEditingRole] = useState<Role | null>(null);
+    const [editingPosition, setEditingPosition] = useState<Position | null>(null);
     const [searchValue, setSearchValue] = useState<string>("");
     const [pagination, setPagination] = useState<TablePaginationConfig>({
         current: 1,
@@ -49,18 +48,17 @@ const RoleManagement: React.FC = () => {
     });
     const [notificationApi, contextHolder] = notification.useNotification();
 
-    const fetchRoles = async (search?: string, page = 1, pageSize = 10) => {
+    const fetchPositions = async (search?: string, page = 1, pageSize = 10) => {
         try {
-            console.log("Fetching roles from:", `${API_URL}/api/roles`);
-            const response = await axios.get(`${API_URL}/api/roles`, {
+            const response = await axios.get(`${API_URL}/api/positions`, {
                 params: { name: search, page, pageSize },
             });
             const { data, pagination: paginationData } = response.data;
-            setRoles(
-                data.map((role: Role, index: number) => ({
-                    ...role,
+            setPositions(
+                data.map((pos: Position, index: number) => ({
+                    ...pos,
                     stt: (page - 1) * pageSize + index + 1,
-                    key: role.ID,
+                    key: pos.ID,
                 }))
             );
             setPagination({
@@ -69,39 +67,37 @@ const RoleManagement: React.FC = () => {
                 total: paginationData.total,
             });
         } catch (error: any) {
-            console.error("Error fetching roles:", error);
             notificationApi.error({
                 message: "Lỗi khi lấy danh sách",
-                description: error.response?.data?.error || "Không thể tải danh sách vai trò.",
+                description: error.response?.data?.error || "Không thể tải danh sách chức vụ.",
                 placement: "topRight",
             });
         }
     };
 
     useEffect(() => {
-        fetchRoles();
+        fetchPositions();
     }, []);
 
     const handleSearch = (value: string) => {
         setSearchValue(value);
-        fetchRoles(value, pagination.current, pagination.pageSize);
+        fetchPositions(value, pagination.current, pagination.pageSize);
     };
 
     const handleTableChange = (newPagination: TablePaginationConfig) => {
-        fetchRoles(searchValue, newPagination.current, newPagination.pageSize);
+        fetchPositions(searchValue, newPagination.current, newPagination.pageSize);
     };
 
     const showAddModal = () => {
-        setEditingRole(null);
+        setEditingPosition(null);
         form.resetFields();
         setIsModalVisible(true);
     };
 
-    const showEditModal = (role: Role) => {
-        setEditingRole(role);
+    const showEditModal = (pos: Position) => {
+        setEditingPosition(pos);
         form.setFieldsValue({
-            Name: role.Name,
-            Is_default: role.Is_default === 1,
+            Name: pos.Name,
         });
         setIsModalVisible(true);
     };
@@ -114,37 +110,37 @@ const RoleManagement: React.FC = () => {
                 Is_default: values.Is_default ? 1 : 0,
             };
 
-            if (editingRole) {
-                const response = await axios.put<Role>(
-                    `${API_URL}/api/roles/${editingRole.ID}`,
+            if (editingPosition) {
+                const response = await axios.put<Position>(
+                    `${API_URL}/api/positionss/${editingPosition.ID}`,
                     payload
                 );
-                setRoles(
-                    roles.map((role) =>
-                        role.ID === editingRole.ID ? { ...role, ...response.data } : role
+                setPositions(
+                    positions.map((pos) =>
+                        pos.ID === editingPosition.ID ? { ...pos, ...response.data } : pos
                     )
                 );
                 notificationApi.success({
-                    message: "Cập nhật vai trò",
-                    description: `Vai trò "${payload.Name}" đã được cập nhật thành công.`,
+                    message: "Cập nhật chức vụ",
+                    description: `chức vụ "${payload.Name}" đã được cập nhật thành công.`,
                     placement: "topRight",
                 });
             } else {
-                const response = await axios.post<Role>(`${API_URL}/api/roles`, payload);
-                setRoles([...roles, { ...response.data, stt: roles.length + 1, key: response.data.ID }]);
+                const response = await axios.post<Position>(`${API_URL}/api/positions`, payload);
+                setPositions([...positions, { ...response.data, stt: positions.length + 1, key: response.data.ID }]);
                 notificationApi.success({
-                    message: "Thêm vai trò",
-                    description: `Vai trò "${payload.Name}" đã được thêm thành công.`,
+                    message: "Thêm chức vụ",
+                    description: `chức vụ "${payload.Name}" đã được thêm thành công.`,
                     placement: "topRight",
                 });
             }
             setIsModalVisible(false);
-            fetchRoles(searchValue, pagination.current, pagination.pageSize);
+            fetchPositions(searchValue, pagination.current, pagination.pageSize);
         } catch (error: any) {
             console.error("Error saving role:", error);
             notificationApi.error({
-                message: "Lỗi khi lưu vai trò",
-                description: error.response?.data?.error || "Không thể lưu vai trò.",
+                message: "Lỗi khi lưu chức vụ",
+                description: error.response?.data?.error || "Không thể lưu chức vụ.",
                 placement: "topRight",
             });
         }
@@ -152,20 +148,20 @@ const RoleManagement: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         try {
-            await axios.delete(`${API_URL}/api/roles/${id}`);
-            const deletedRole = roles.find((role) => role.ID === id);
-            setRoles(roles.filter((role) => role.ID !== id));
+            await axios.delete(`${API_URL}/api/positions/${id}`);
+            const deletedPosition = positions.find((pos) => pos.ID === id);
+            setPositions(positions.filter((pos) => pos.ID !== id));
             notificationApi.success({
-                message: "Xóa vai trò",
-                description: `Vai trò "${deletedRole?.Name}" đã được xóa thành công.`,
+                message: "Xóa chức vụ",
+                description: `chức vụ "${deletedPosition?.Name}" đã được xóa thành công.`,
                 placement: "topRight",
             });
-            fetchRoles(searchValue, pagination.current, pagination.pageSize);
+            fetchPositions(searchValue, pagination.current, pagination.pageSize);
         } catch (error: any) {
             console.error("Error deleting role:", error);
             notificationApi.error({
-                message: "Lỗi khi xóa vai trò",
-                description: error.response?.data?.error || "Không thể xóa vai trò.",
+                message: "Lỗi khi xóa chức vụ",
+                description: error.response?.data?.error || "Không thể xóa chức vụ.",
                 placement: "topRight",
             });
         }
@@ -173,46 +169,26 @@ const RoleManagement: React.FC = () => {
 
     const handleCancel = () => {
         setIsModalVisible(false);
-        setEditingRole(null);
+        setEditingPosition(null);
         form.resetFields();
     };
 
     // Khai báo kiểu rõ ràng cho columns
-    const columns: ColumnType<Role>[] = [
+    const columns: ColumnType<Position>[] = [
         {
             title: "STT",
             dataIndex: "stt",
             key: "stt",
         },
         {
-            title: "Mã vị trí",
-            dataIndex: "ID",
-            key: "ID",
-            sorter: (a: Role, b: Role) => a.ID - b.ID,
-        },
-        {
-            title: "Tên vị trí",
+            title: "Tên",
             dataIndex: "Name",
             key: "Name",
         },
         {
-            title: "Mặc định",
-            dataIndex: "Is_default",
-            key: "Is_default",
-            render: (state: number) => {
-                const color = state === 1 ? "green" : "gray";
-                return <Tag color={color}>{state === 1 ? "Có" : "Không"}</Tag>;
-            },
-            filters: [
-                { text: "Có", value: 1 },
-                { text: "Không", value: 0 },
-            ],
-            onFilter: (value: any, record: Role) => record.Is_default === value,
-        },
-        {
             title: "Tác vụ",
             key: "action",
-            render: (_: any, record: Role) => (
+            render: (_: any, record: Position) => (
                 <Space size="middle">
                     <Button icon={<FormOutlined />} onClick={() => showEditModal(record)} />
                     <Button icon={<RestOutlined />} onClick={() => handleDelete(record.ID)} />
@@ -222,7 +198,7 @@ const RoleManagement: React.FC = () => {
     ];
 
     return (
-        <MainLayout title="Quản lý vai trò">
+        <MainLayout title="Quản lý chức vụ">
             {contextHolder}
             <Row gutter={16} style={{ marginTop: "16px" }}>
                 <Col span={6}></Col>
@@ -243,7 +219,7 @@ const RoleManagement: React.FC = () => {
             </Row>
             <Content style={{ margin: "16px" }}>
                 <Table
-                    dataSource={roles}
+                    dataSource={positions}
                     columns={columns}
                     pagination={{
                         current: pagination.current,
@@ -261,7 +237,7 @@ const RoleManagement: React.FC = () => {
                 />
             </Content>
             <Modal
-                title={editingRole ? "Sửa vai trò" : "Tạo mới vai trò"}
+                title={editingPosition ? "Sửa chức vụ" : "Tạo mới chức vụ"}
                 visible={isModalVisible}
                 onOk={handleOk}
                 onCancel={handleCancel}
@@ -269,25 +245,20 @@ const RoleManagement: React.FC = () => {
             >
                 <Form form={form} layout="vertical">
                     <Row gutter={16}>
-                        <Col span={12}>
+                        <Col span={24}>
                             <Form.Item
                                 name="Name"
-                                label="Tên vị trí"
-                                rules={[{ required: true, message: "Vui lòng nhập tên vị trí" }]}
+                                label="Tên chức vụ"
+                                rules={[{ required: true, message: "Vui lòng nhập tên chức vụ" }]}
                             >
                                 <Input />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="Is_default" label="Mặc định" valuePropName="checked">
-                                <Switch checkedChildren="Có" unCheckedChildren="Không" />
                             </Form.Item>
                         </Col>
                     </Row>
                     <Row justify="end">
                         <Space>
                             <Button type="primary" onClick={handleOk}>
-                                {editingRole ? "Cập nhật" : "Tạo mới"}
+                                {editingPosition ? "Cập nhật" : "Tạo mới"}
                             </Button>
                             <Button onClick={handleCancel}>Hủy bỏ</Button>
                         </Space>
@@ -298,4 +269,4 @@ const RoleManagement: React.FC = () => {
     );
 };
 
-export default RoleManagement;
+export default Position;

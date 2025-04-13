@@ -3,7 +3,7 @@ import { Button, Calendar, Col, Input, Layout, Row, Typography } from "antd";
 import React from "react";
 import MainLayout from "../../layouts/MainLayout";
 import '../../App.css';
-import moment from 'moment';
+import dayjs from 'dayjs'; // Sử dụng dayjs thay vì moment
 import { useState, useEffect } from "react";
 import { API_URL } from "../../config/index";
 
@@ -21,6 +21,7 @@ interface Timekeeping {
 
 const TimeManagement: React.FC = () => {
     const [timekeepingData, setTimekeepingData] = useState<Timekeeping[]>([]);
+    const [currentDate, setCurrentDate] = useState(dayjs()); // Sử dụng dayjs
 
     const dateCellRender = (date: any) => {
         const day = date.date();
@@ -29,9 +30,9 @@ const TimeManagement: React.FC = () => {
 
         const FORMAT = "YYYY-MM-DD";
 
-        const currentDate = moment([year, month - 1, day]).format(FORMAT);
+        const currentDate = dayjs(`${year}-${month}-${day}`).format(FORMAT);
         const hasTimekeeping = timekeepingData.some((record) => {
-            const recordDate = moment(record.Date).format(FORMAT);
+            const recordDate = dayjs(record.Date).format(FORMAT); // Sử dụng dayjs
             return recordDate === currentDate;
         });
 
@@ -63,20 +64,22 @@ const TimeManagement: React.FC = () => {
 
     const onPanelChange = async (date: any, mode: any) => {
         if (mode === 'month') {
-          const year = date.year();
-          const month = String(date.month() + 1).padStart(2, '0');
-          try {
+            const year = date.year();
+            const month = String(date.month() + 1).padStart(2, '0');
+            setCurrentDate(date); // cập nhật tháng hiện tại khi người dùng thay đổi
+            try {
                 await getTimeKeeping(year, month);
-          } catch (error) {
-            console.error('Lỗi khi lấy dữ liệu chấm công:', error);
-          }
+            } catch (error) {
+                console.error('Lỗi khi lấy dữ liệu chấm công:', error);
+            }
         }
-      }
-    
+    }
+
     const getCurrentTimeKeeping = async () => {
-        const now = moment();
+        const now = dayjs(); // Sử dụng dayjs
         const year = now.year();
         const month = String(now.month() + 1).padStart(2, '0');
+        setCurrentDate(now); // khởi tạo tháng hiện tại
         try {
             await getTimeKeeping(year, month);
         } catch (error) {
@@ -88,19 +91,25 @@ const TimeManagement: React.FC = () => {
         getCurrentTimeKeeping();
     }, []);
 
+    const month = currentDate.month() + 1; // Đảm bảo month là số nguyên hợp lệ
+    const year = currentDate.year(); // Kiểm tra year để lấy giá trị hợp lệ
+    const monthStart = currentDate.startOf("month").format("DD/MM/YYYY");
+    const monthEnd = currentDate.endOf("month").format("DD/MM/YYYY");
+
     return (
-        <MainLayout  title="Quản lý chấm công">
+        <MainLayout title="Quản lý chấm công">
             <Content style={{ margin: "16px" }}>
                 <div style={{ background: "#fff", padding: "16px", borderRadius: "8px" }}>
                     <Title level={4} style={{ textAlign: "center" }}>
-                        Bảng chấm công tháng 3, 2025
+                        Bảng chấm công tháng {month}, {year}
                     </Title>
                     <Text style={{ display: "block", textAlign: "center", marginBottom: "16px" }}>
-                        01/03/2025 - 31/03/2025
+                        {monthStart} - {monthEnd}
                     </Text>
                     <Calendar 
                         cellRender={dateCellRender}
                         onPanelChange={onPanelChange}
+                        defaultValue={currentDate} // Đảm bảo sử dụng dayjs
                     />
                 </div>
             </Content>

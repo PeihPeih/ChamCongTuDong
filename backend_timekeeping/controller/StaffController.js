@@ -2,6 +2,13 @@ import Staff from "../models/Staff.js";
 import Role from "../models/Role.js";
 import bcrypt from "bcrypt";
 import { Op } from "sequelize";
+import Image from "../models/Image.js";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Lấy danh sách nhân viên
 export const getAllStaff = async (req, res) => {
@@ -249,5 +256,78 @@ export const deleteStaff = async (req, res) => {
   } catch (error) {
     console.error("Error in deleteStaff:", error);
     res.status(500).json({ error: "Lỗi khi xóa nhân viên" });
+  }
+};
+
+export const getStaffByPosition = async (req, res) => {
+  try {
+    const staff = await Staff.findAll({
+      where: { PositionID: req.params.positionId },
+    });
+    res.json(staff);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi khi lấy nhân viên" });
+  }
+};
+
+export const addSampleImage = async (req, res) => {
+  try {
+    const staffId = req.params.id;
+    const staff = await Staff.findByPk(staffId);
+    if (!staff) {
+      return res.status(404).json({ error: "Không tìm thấy nhân viên" });
+    }
+
+    if (!req.body || req.body.length === 0) {
+      return res.status(400).json({ error: "Vui lòng tải lên một tệp ảnh" });
+    }
+
+    const uploadDir = "data/";
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const timestamp = new Date().toISOString().replace(/:/g, "-");
+    const fileName = `sample-image-${staffId}-${timestamp}.jpg`;
+    const filePath = path.join(uploadDir, fileName).replace(/\\/g, "/"); 
+
+    fs.writeFileSync(filePath, req.body);
+
+    const existingImage = await Image.findOne({ staffId: staffId });
+    if (existingImage) {
+      existingImage.imagePaths.push(filePath);
+      await existingImage.save();
+    } else {
+      const newImage = new Image({
+        staffId: staffId,
+        imagePaths: [filePath],
+      });
+      await newImage.save();
+    }
+
+    res.json({ message: "Cập nhật ảnh mẫu thành công!", path: filePath });
+  } catch (error) {
+    console.error("Error in addSampleImage:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật ảnh mẫu" });
+  }
+};
+
+export const getSampleImage = async (req, res) => {
+  try {
+    const staffId = req.params.id;
+    const image = await Image.findOne({ staffId: staffId });
+
+    if (!image) {
+      return res.status(404).json({ error: "Không tìm thấy ảnh mẫu" });
+    }
+
+    const imageObj = image.toObject();
+
+    imageObj.uploadedAt = new Date(imageObj.uploadedAt).toISOString().split("T")[0];
+
+    res.json(imageObj);
+  } catch (error) {
+    console.error("Error in getSampleImage:", error);
+    res.status(500).json({ error: "Lỗi khi lấy ảnh mẫu" });
   }
 };
