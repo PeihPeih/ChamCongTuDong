@@ -10,7 +10,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Lấy danh sách nhân viên
 export const getAllStaff = async (req, res) => {
   try {
     const { name, page = 1, pageSize = 10 } = req.query;
@@ -50,7 +49,6 @@ export const getAllStaff = async (req, res) => {
   }
 };
 
-// Lấy nhân viên theo ID
 export const getStaffById = async (req, res) => {
   try {
     const staff = await Staff.findByPk(req.params.id, {
@@ -291,7 +289,7 @@ export const addSampleImage = async (req, res) => {
     const fileName = `sample-image-${staffId}-${timestamp}.jpg`;
     const filePath = path.join(uploadDir, fileName).replace(/\\/g, "/"); 
 
-    fs.writeFileSync(filePath, req.body);
+    fs.writeFileSync(filePath, Buffer.from(req.body));
 
     const existingImage = await Image.findOne({ staffId: staffId });
     if (existingImage) {
@@ -329,5 +327,42 @@ export const getSampleImage = async (req, res) => {
   } catch (error) {
     console.error("Error in getSampleImage:", error);
     res.status(500).json({ error: "Lỗi khi lấy ảnh mẫu" });
+  }
+};
+
+export const deleteImages = async (req, res) => {
+  const { id } = req.params;
+  const { imageNames } = req.body; // Lấy danh sách tên ảnh từ body
+
+  if (!imageNames || imageNames.length === 0) {
+    return res.status(400).json({ message: "Danh sách tên ảnh bị rỗng" });
+  }
+
+  try {
+    const imageDoc = await Image.findOne({ staffId: Number(id) });
+    if (!imageDoc) {
+      return res.status(404).json({ message: 'Không tìm thấy nhân viên với ID này' });
+    }
+
+    const imagesToDelete = imageNames.filter(imageName => imageDoc.imagePaths.includes(imageName));
+    if (imagesToDelete.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy ảnh nào để xóa' });
+    }
+
+    for (let imageName of imagesToDelete) {
+      const matchedPath = imageDoc.imagePaths.find(imgPath => imgPath.includes(imageName));
+      
+      const fullPath = path.join(__dirname, '..', matchedPath);
+      await fs.promises.unlink(fullPath);
+
+      imageDoc.imagePaths = imageDoc.imagePaths.filter(p => p !== matchedPath);
+    }
+
+    await imageDoc.save();
+
+    return res.status(200).json({ message: 'Xóa ảnh thành công', deletedImages: imagesToDelete });
+  } catch (err) {
+    console.error('Lỗi server:', err);
+    return res.status(500).json({ message: 'Lỗi server' });
   }
 };
