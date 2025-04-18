@@ -47,9 +47,9 @@ const connectDatabases = async () => {
     
     await sequelize.sync();
 
-    const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/embedded_system";
-    await mongoose.connect(mongoURI);
-    console.log("-------> Kết nối MongoDB thành công!");
+    // const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/embedded_system";
+    // await mongoose.connect(mongoURI);
+    // console.log("-------> Kết nối MongoDB thành công!");
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {

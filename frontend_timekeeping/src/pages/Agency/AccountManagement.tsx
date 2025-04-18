@@ -3,6 +3,7 @@ import {
   PlusOutlined,
   RestOutlined,
   SearchOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -17,12 +18,15 @@ import {
   Table,
   notification,
   TablePaginationConfig,
+  Upload,
+  message,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import MainLayout from "../../layouts/MainLayout";
 import { ColumnType } from "antd/es/table";
 import { API_URL } from "../../config/index";
+import type { UploadFile, UploadProps } from "antd";
 
 // Định nghĩa kiểu cho Staff
 interface Staff {
@@ -34,7 +38,11 @@ interface Staff {
   Gender: string;
   DayOfBirth: string;
   RoleID: number;
+  DepartmentID: number;
+  PositionID: number;
   Role?: { ID: number; Name: string };
+  Department?: { ID: number; Name: string };
+  Position?: { ID: number; Name: string };
   stt?: number;
   key?: number;
 }
@@ -46,12 +54,24 @@ interface Role {
   Is_default: number;
 }
 
+interface Department {
+  id: number;
+  Name: string;
+}
+
+interface Position {
+  id: number;
+  Name: string;
+}
+
 const { Content } = Layout;
 const { Option } = Select;
 
 const AccountManagement: React.FC = () => {
   const [staffs, setStaffs] = useState<Staff[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]); // Danh sách roles cho dropdown
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [form] = Form.useForm();
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
@@ -62,6 +82,7 @@ const AccountManagement: React.FC = () => {
     total: 0,
   });
   const [notificationApi, contextHolder] = notification.useNotification();
+  const [fileList, setFileList] = useState<UploadFile[]>([]); // Thêm state để quản lý fileList
 
   // Lấy danh sách nhân viên
   const fetchStaffs = async (search?: string, page = 1, pageSize = 10) => {
@@ -108,9 +129,93 @@ const AccountManagement: React.FC = () => {
     }
   };
 
+  // Lấy danh sách departments cho dropdown
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/departments/dropdown`);
+      setDepartments(response.data);
+    } catch (error: any) {
+      console.error("Error fetching departments:", error);
+      notificationApi.error({
+        message: "Lỗi khi lấy danh sách phòng ban",
+        description: error.response?.data?.error || "Không thể tải danh sách phòng ban.",
+        placement: "topRight",
+      });
+    }
+  };
+
+  // Lấy danh sách positions cho dropdown
+  const fetchPositions = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/positions/dropdown`);
+      setPositions(response.data);
+    } catch (error: any) {
+      console.error("Error fetching positions:", error);
+      notificationApi.error({
+        message: "Lỗi khi lấy danh sách chức vụ",
+        description: error.response?.data?.error || "Không thể tải danh sách chức vụ.",
+        placement: "topRight",
+      });
+    }
+  };
+
+  // Xử lý upload file Excel
+  const uploadProps: UploadProps = {
+    name: "file",
+    accept: ".xlsx",
+    showUploadList: false, // Tắt hiển thị danh sách file
+    beforeUpload: (file: UploadFile) => {
+      return false; // Ngăn upload tự động để xử lý thủ công
+    },
+    onChange: async (info: { file: UploadFile }) => {
+      const { file } = info;
+      // Cập nhật fileList để hiển thị tên file tạm thời
+      setFileList([file]);
+
+      // Kiểm tra kiểu file
+      if (file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+        message.error("Vui lòng chọn file Excel (.xlsx)");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file as any); // Ép kiểu để tránh lỗi TypeScript
+
+      try {
+        const response = await axios.post(`${API_URL}/api/staffs/import`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (response.data.createdCount > 0) {
+          notificationApi.success({
+            message: "Import thành công",
+            description: `Đã tạo ${response.data.createdCount} nhân viên mới.`,
+            placement: "topRight",
+          });
+        }
+        fetchStaffs(searchValue, pagination.current, pagination.pageSize);
+        setFileList([]); // Reset fileList sau khi import thành công
+      } catch (error: any) {
+        notificationApi.error({
+          message: "Lỗi khi import nhân viên",
+          description: (
+            <ul>
+              {error.response?.data.errors.map((error: string, index: number) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          ),
+          placement: "topRight",
+        });
+        setFileList([]); // Reset fileList sau khi import thành công
+      }
+    },
+  };
+
   useEffect(() => {
     fetchStaffs();
-    fetchRoles(); // Lấy danh sách roles khi component mount
+    fetchRoles();
+    fetchDepartments();
+    fetchPositions();
   }, []);
 
   const handleSearch = (value: string) => {
@@ -125,7 +230,6 @@ const AccountManagement: React.FC = () => {
   const showAddModal = () => {
     setEditingStaff(null);
     form.resetFields();
-    // Đặt giá trị mặc định cho RoleID là role có Is_default = true
     const defaultRole = roles.find((role) => role.Is_default === 1);
     if (defaultRole) {
       form.setFieldsValue({ RoleID: defaultRole.ID });
@@ -135,20 +239,19 @@ const AccountManagement: React.FC = () => {
 
   const showEditModal = (staff: Staff) => {
     setEditingStaff(staff);
-
-    // Định dạng DayOfBirth thành chuỗi YYYY-MM-DD
     const formattedDayOfBirth = staff.DayOfBirth
       ? new Date(staff.DayOfBirth).toISOString().split("T")[0]
       : undefined;
-
     form.setFieldsValue({
       Fullname: staff.Fullname,
       Code: staff.Code,
       Email: staff.Email,
       Gender: staff.Gender,
-      DayOfBirth: formattedDayOfBirth, // Set giá trị đã định dạng
+      DayOfBirth: formattedDayOfBirth,
       Username: staff.Username,
       RoleID: staff.RoleID,
+      DepartmentID: staff.DepartmentID,
+      PositionID: staff.PositionID,
     });
     setIsModalVisible(true);
   };
@@ -166,6 +269,8 @@ const AccountManagement: React.FC = () => {
         DayOfBirth: values.DayOfBirth,
         ConfirmPassword: values.ConfirmPassword,
         RoleID: values.RoleID,
+        DepartmentID: values.DepartmentID,
+        PositionID: values.PositionID,
       };
 
       if (editingStaff) {
@@ -264,6 +369,16 @@ const AccountManagement: React.FC = () => {
       key: "Role",
     },
     {
+      title: "Phòng ban",
+      dataIndex: ["Department", "Name"],
+      key: "Department",
+    },
+    {
+      title: "Chức vụ",
+      dataIndex: ["Position", "Name"],
+      key: "Position",
+    },
+    {
       title: "Tác vụ",
       key: "action",
       render: (_: any, record: Staff) => (
@@ -290,9 +405,14 @@ const AccountManagement: React.FC = () => {
           />
         </Col>
         <Col span={4}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={showAddModal}>
-            Thêm mới
-          </Button>
+          <Space>
+            <Button type="primary" icon={<PlusOutlined />} onClick={showAddModal}>
+              Thêm mới
+            </Button>
+            <Upload {...uploadProps}>
+              <Button icon={<UploadOutlined />}>Import Excel</Button>
+            </Upload>
+          </Space>
         </Col>
       </Row>
       <Content style={{ margin: "16px" }}>
@@ -331,21 +451,6 @@ const AccountManagement: React.FC = () => {
                 <Input placeholder="Nhập Họ và tên nhân viên" />
               </Form.Item>
             </Col>
-            {/* <Col span={12}>
-              <Form.Item
-                name="RoleID"
-                label="Nguời tạo"
-                rules={[{ required: true, message: "Vui lòng chọn vai trò" }]}
-              >
-                <Select placeholder="Chọn vai trò">
-                  {roles.map((role) => (
-                    <Option key={role.ID} value={role.ID}>
-                      {role.Name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col> */}
           </Row>
           <Row gutter={16}>
             <Col span={12}>
@@ -360,13 +465,45 @@ const AccountManagement: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="RoleID"
-                label="Vị trí"
-                rules={[{ required: true, message: "Vui lòng chọn vị trí" }]}
+                label="Vai trò"
+                rules={[{ required: true, message: "Vui lòng chọn vai trò" }]}
               >
-                <Select placeholder="Chọn vị trí">
+                <Select placeholder="Chọn vai trò">
                   {roles.map((role) => (
                     <Option key={role.ID} value={role.ID}>
                       {role.Name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="DepartmentID"
+                label="Phòng ban"
+                rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}
+              >
+                <Select placeholder="Chọn phòng ban">
+                  {departments.map((department) => (
+                    <Option key={department.id} value={department.id}>
+                      {department.Name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="PositionID"
+                label="Chức vụ"
+                rules={[{ required: true, message: "Vui lòng chọn chức vụ" }]}
+              >
+                <Select placeholder="Chọn chức vụ">
+                  {positions.map((position) => (
+                    <Option key={position.id} value={position.id}>
+                      {position.Name}
                     </Option>
                   ))}
                 </Select>
@@ -382,7 +519,7 @@ const AccountManagement: React.FC = () => {
               >
                 <Select placeholder="Chọn giới tính">
                   <Option value="male">Nam</Option>
-                  <Option value="famale">Nữ</Option>
+                  <Option value="female">Nữ</Option>
                 </Select>
               </Form.Item>
             </Col>
