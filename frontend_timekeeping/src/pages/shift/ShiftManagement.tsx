@@ -89,6 +89,7 @@ const ShiftManagement: React.FC = () => {
 
     useEffect(() => {
         fetchShifts();
+        console.log(shifts);
     }, []);
 
     const handleSearch = (value: string) => {
@@ -233,15 +234,17 @@ const ShiftManagement: React.FC = () => {
             title: "Loại ca",
             dataIndex: "Type_shift",
             key: "Type_shift",
-            render: (type: string) => {
-                const color = type === "1" ? "blue" : "purple";
-                return <Tag color={color}>{type === "1" ? "Ca sáng" : "Ca tối"}</Tag>;
+            render: (type: string | number) => {
+                // Chuyển đổi type thành chuỗi để xử lý đồng nhất
+                const typeStr = String(type);
+                const color = typeStr === "1" ? "blue" : "purple";
+                return <Tag color={color}>{typeStr === "1" ? "Ca sáng" : "Ca tối"}</Tag>;
             },
             filters: [
                 { text: "Ca sáng", value: "1" },
                 { text: "Ca tối", value: "2" },
             ],
-            onFilter: (value: any, record: Shift) => record.Type_shift === value,
+            onFilter: (value: any, record: Shift) => String(record.Type_shift) === value,
         },
         {
             title: "Mặc định",
