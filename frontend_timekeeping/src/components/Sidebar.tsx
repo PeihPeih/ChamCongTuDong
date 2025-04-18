@@ -87,7 +87,7 @@ const Sidebar: React.FC = () => {
       ],
     },
     {
-      key: "7",
+      key: "8",
       icon: <CameraOutlined />,
       label: <Link to="/staff/image-capture">Lấy mẫu khuôn mặt</Link>,
       path: "/staff/image-capture",

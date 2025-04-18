@@ -6,9 +6,16 @@ import Image from "../models/Image.js";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
+import dotenv from "dotenv";
+import axios from "axios";
+
+dotenv.config(); // Load environment variables
+
+const FACE_API = process.env.FACE_API || "http://localhost:5000"; // Địa chỉ API AI
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const DATA_DIR = path.join(__dirname, "..", "..", "data"); 
 
 export const getAllStaff = async (req, res) => {
   try {
@@ -280,30 +287,41 @@ export const addSampleImage = async (req, res) => {
       return res.status(400).json({ error: "Vui lòng tải lên một tệp ảnh" });
     }
 
-    const uploadDir = "data/";
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    // Check mặt
+    const imageBase64 = Buffer.from(req.body).toString("base64");
+
+    const response = await axios.post(`${FACE_API}/api/check-frontal-face`, {
+      image_base64: imageBase64,
+    });
+    if (response.data["stt"] != 1000){
+      return res.status(400).json({ error: "Vui lòng tải lên ảnh mặt chính diện" });
+    }
+
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 
     const timestamp = new Date().toISOString().replace(/:/g, "-");
     const fileName = `sample-image-${staffId}-${timestamp}.jpg`;
-    const filePath = path.join(uploadDir, fileName).replace(/\\/g, "/"); 
 
-    fs.writeFileSync(filePath, Buffer.from(req.body));
+    const absolutePath = path.join(DATA_DIR, fileName); // để ghi file
+    const relativePath = path.join("data", fileName).replace(/\\/g, "/"); // để lưu vào Mongo
+
+    fs.writeFileSync(absolutePath, Buffer.from(req.body));
 
     const existingImage = await Image.findOne({ staffId: staffId });
     if (existingImage) {
-      existingImage.imagePaths.push(filePath);
+      existingImage.imagePaths.push(relativePath);
       await existingImage.save();
     } else {
       const newImage = new Image({
         staffId: staffId,
-        imagePaths: [filePath],
+        imagePaths: [relativePath],
       });
       await newImage.save();
     }
 
-    res.json({ message: "Cập nhật ảnh mẫu thành công!", path: filePath });
+    res.json({ message: "Cập nhật ảnh mẫu thành công!", path: relativePath });
   } catch (error) {
     console.error("Error in addSampleImage:", error);
     res.status(500).json({ error: "Lỗi khi cập nhật ảnh mẫu" });
@@ -313,17 +331,32 @@ export const addSampleImage = async (req, res) => {
 export const getSampleImage = async (req, res) => {
   try {
     const staffId = req.params.id;
+
     const image = await Image.findOne({ staffId: staffId });
 
     if (!image) {
       return res.status(404).json({ error: "Không tìm thấy ảnh mẫu" });
     }
 
+    const staff = await Staff.findByPk(staffId);
+    if (!staff) {
+      return res.status(404).json({ error: "Không tìm thấy thông tin nhân viên" });
+    }
+
     const imageObj = image.toObject();
 
     imageObj.uploadedAt = new Date(imageObj.uploadedAt).toISOString().split("T")[0];
 
-    res.json(imageObj);
+    const response = {
+      ...imageObj,
+      staffInfo: {
+        ID: staff.ID,
+        Fullname: staff.Fullname,
+        Code: staff.Code,
+      }
+    };
+
+    res.json(response);
   } catch (error) {
     console.error("Error in getSampleImage:", error);
     res.status(500).json({ error: "Lỗi khi lấy ảnh mẫu" });
@@ -332,7 +365,7 @@ export const getSampleImage = async (req, res) => {
 
 export const deleteImages = async (req, res) => {
   const { id } = req.params;
-  const { imageNames } = req.body; // Lấy danh sách tên ảnh từ body
+  const { imageNames } = req.body;
 
   if (!imageNames || imageNames.length === 0) {
     return res.status(400).json({ message: "Danh sách tên ảnh bị rỗng" });
@@ -341,28 +374,36 @@ export const deleteImages = async (req, res) => {
   try {
     const imageDoc = await Image.findOne({ staffId: Number(id) });
     if (!imageDoc) {
-      return res.status(404).json({ message: 'Không tìm thấy nhân viên với ID này' });
+      return res.status(404).json({ message: "Không tìm thấy nhân viên với ID này" });
     }
+    const imagesToDelete = imageDoc.imagePaths.filter((imgPath) => 
+      imageNames.some((imgName) => imgPath.includes(imgName))
+    );
 
-    const imagesToDelete = imageNames.filter(imageName => imageDoc.imagePaths.includes(imageName));
     if (imagesToDelete.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy ảnh nào để xóa' });
+      return res.status(404).json({ message: "Không tìm thấy ảnh nào để xóa" });
     }
 
-    for (let imageName of imagesToDelete) {
-      const matchedPath = imageDoc.imagePaths.find(imgPath => imgPath.includes(imageName));
-      
-      const fullPath = path.join(__dirname, '..', matchedPath);
-      await fs.promises.unlink(fullPath);
+    for (let relativePath of imagesToDelete) {
+      const fullPath = path.join(__dirname, "..", "..", relativePath);
+      try {
+        await fs.promises.unlink(fullPath);
+      } catch (err) {
+        console.warn(`Không thể xóa file: ${fullPath}`, err);
+      }
 
-      imageDoc.imagePaths = imageDoc.imagePaths.filter(p => p !== matchedPath);
+      // Xoá khỏi Mongo
+      imageDoc.imagePaths = imageDoc.imagePaths.filter(p => p !== relativePath);
     }
 
     await imageDoc.save();
 
-    return res.status(200).json({ message: 'Xóa ảnh thành công', deletedImages: imagesToDelete });
+    return res.status(200).json({
+      message: "Xóa ảnh thành công",
+      deletedImages: imagesToDelete,
+    });
   } catch (err) {
-    console.error('Lỗi server:', err);
-    return res.status(500).json({ message: 'Lỗi server' });
+    console.error("Lỗi server:", err);
+    return res.status(500).json({ message: "Lỗi server" });
   }
 };

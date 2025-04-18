@@ -7,13 +7,14 @@ const __dirname = path.dirname(__filename);
 
 export const getImage = async (req, res) => {
   try {
-    const imagePath = req.params[0]; 
+    const imagePath = req.params[0]; // ví dụ: data/image.jpg
 
     if (imagePath.includes("..")) {
       return res.status(400).json({ error: "Đường dẫn không hợp lệ" });
     }
 
-    const fullPath = path.join(__dirname, "..", imagePath);
+    // Đi từ backend/controllers => project-root/data
+    const fullPath = path.join(__dirname, "..", "..", imagePath);
 
     res.sendFile(fullPath, (err) => {
       if (err) {
