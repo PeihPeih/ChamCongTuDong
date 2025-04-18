@@ -16,7 +16,7 @@ import roleRoutes from "./routes/RoleRoutes.js";
 import configRoutes from "./routes/configRoutes.js";
 import dayOffTypeRoutes from "./routes/dayOffTypeRoutes.js";
 import authRoutes from "./routes/Auth.js";
-import imageRoutes from "./routes/ImageRoutes.js"; 
+import imageRoutes from "./routes/ImageRoutes.js";
 
 dotenv.config(); // Load environment variables
 
@@ -44,21 +44,21 @@ const connectDatabases = async () => {
   try {
     await sequelize.authenticate();
     console.log("-------> Kết nối MySQL thành công!");
-    
+
     await sequelize.sync();
 
-    // const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/embedded_system";
-    // await mongoose.connect(mongoURI);
-    // console.log("-------> Kết nối MongoDB thành công!");
+    const mongoURI =
+      process.env.MONGO_URI || "mongodb://localhost:27017/embedded_system";
+    await mongoose.connect(mongoURI);
+    console.log("-------> Kết nối MongoDB thành công!");
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`-------> Server is running on http://localhost:${PORT}`);
     });
-
   } catch (err) {
     console.error("[Error] Lỗi kết nối database:", err);
-    process.exit(1); 
+    process.exit(1);
   }
 };
 
