@@ -17,6 +17,7 @@ import configRoutes from "./routes/configRoutes.js";
 import dayOffTypeRoutes from "./routes/dayOffTypeRoutes.js";
 import authRoutes from "./routes/Auth.js";
 import imageRoutes from "./routes/ImageRoutes.js";
+import staffShiftRoutes from "./routes/StaffShiftRoutes.js";
 
 dotenv.config(); // Load environment variables
 
@@ -38,6 +39,7 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/dayofftypes", dayOffTypeRoutes);
 app.use("/api/images", imageRoutes);
+app.use("/api/staffshift", staffShiftRoutes);
 
 // Hàm kết nối cả hai database
 const connectDatabases = async () => {

@@ -44,8 +44,8 @@ export const createShift = async (req, res) => {
       Start_date,
       Total_time,
     } = req.body;
-
     // Validation
+    console.log(req.body);
     if (!Name) {
       return res.status(400).json({ error: "Tên ca làm việc là bắt buộc" });
     }
@@ -152,6 +152,7 @@ export const createShift = async (req, res) => {
 // Cập nhật ca làm việc
 export const updateShift = async (req, res) => {
   try {
+    console.log(req.body);
     const shift = await Shift.findByPk(req.params.id);
     if (!shift) {
       return res.status(404).json({ error: "Không tìm thấy ca làm việc" });

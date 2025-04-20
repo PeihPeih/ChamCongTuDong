@@ -1,8 +1,8 @@
-import { DataTypes } from "sequelize"; 
-import sequelize from "../models/index.js"; 
-import Position from "./Position.js"; 
-import Department from "./Department.js"; 
-import Role from "./Role.js"; 
+import { DataTypes } from "sequelize";
+import sequelize from "./index.js";
+import Position from "./Position.js";
+import Department from "./Department.js";
+import Role from "./Role.js";
 
 const Staff = sequelize.define(
   "Staff",

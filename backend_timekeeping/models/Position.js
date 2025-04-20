@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize"; // Dùng import thay vì require
-import sequelize from "../models/index.js"; // Dùng import thay vì require
+import sequelize from "./index.js"; // Dùng import thay vì require
 
 const Position = sequelize.define(
   "Position",

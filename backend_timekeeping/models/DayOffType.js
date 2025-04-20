@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../models/index.js";
+import sequelize from "./index.js";
 
 const DayOffType = sequelize.define(
   "DayOffType",
