@@ -25,6 +25,7 @@ export const getAllShifts = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Lỗi khi lấy danh sách ca làm việc" });
   }
 };

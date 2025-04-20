@@ -71,3 +71,14 @@ export const deletePosition = async (req, res) => {
     res.status(500).json({ error: "Lỗi khi xóa chức vụ" });
   }
 };
+
+export const getPositionsForDropdown = async (req, res) => {
+  try {
+    const positions = await Position.findAll({
+      attributes: ["id", "Name"],
+    });
+    res.json(positions);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi khi lấy danh sách chức vụ" });
+  }
+};

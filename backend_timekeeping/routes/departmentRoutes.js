@@ -6,9 +6,11 @@ import {
   getAllDepartments,
   getDepartmentById,
   updateDepartment,
+  getDepartmentsForDropdown,
 } from "../controller/departmentController.js";
 
 router.get("/", getAllDepartments);
+router.get("/dropdown", getDepartmentsForDropdown); // Lấy danh sách phòng ban cho dropdown
 router.get("/:id", getDepartmentById);
 router.post("/", createDepartment);
 router.put("/:id", updateDepartment);

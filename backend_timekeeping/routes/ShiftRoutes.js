@@ -5,7 +5,7 @@ import {
   deleteShift,
   getAllShifts,
   updateShift,
-} from "../controller/shiftController.js";
+} from "../controller/ShiftController.js";
 
 router.get("/", getAllShifts);
 router.post("/", createShift);

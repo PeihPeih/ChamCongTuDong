@@ -71,3 +71,14 @@ export const deleteDepartment = async (req, res) => {
     res.status(500).json({ error: "Lỗi khi xóa phòng ban" });
   }
 };
+
+export const getDepartmentsForDropdown = async (req, res) => {
+  try {
+    const departments = await Department.findAll({
+      attributes: ["id", "Name"],
+    });
+    res.json(departments);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi khi lấy danh sách phòng ban" });
+  }
+}

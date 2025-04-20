@@ -18,6 +18,7 @@ import dayOffTypeRoutes from "./routes/dayOffTypeRoutes.js";
 import authRoutes from "./routes/Auth.js";
 import imageRoutes from "./routes/ImageRoutes.js";
 import staffShiftRoutes from "./routes/StaffShiftRoutes.js";
+
 dotenv.config(); // Load environment variables
 
 const app = express();
