@@ -16,8 +16,8 @@ import RegisterPage from "../pages/register/RegisterPage";
 import ProtectedRoute from "./protectedRoute";
 import ChangePassword from "../pages/change-password/ChangePassword";
 import ImageCapture from "../pages/image-capture/ImageCapture";
-
 import ShiftManagement from "../pages/shift/ShiftManagement";
+import StaffShiftManagement from "../pages/shift/StaffShiftManagement";
 
 const AppRoutes = () => {
   return (
@@ -46,10 +46,13 @@ const AppRoutes = () => {
           <Route path="shifts" element={<Shifts />} />
           <Route path="staffs" element={<AccountManagement />} />
           <Route path="roles" element={<RoleManagement />} />
+          <Route
+            path="staffshift-management"
+            element={<StaffShiftManagement />}
+          />
         </Route>
         <Route path="/staff/image-capture" element={<ImageCapture />} />
       </Route>
-      
 
       {/* Fallback route - Chuyển hướng các đường dẫn không hợp lệ về login */}
       <Route path="*" element={<Navigate to="/login" replace />} />
