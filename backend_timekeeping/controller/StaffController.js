@@ -3,15 +3,20 @@ import Role from "../models/Role.js";
 import bcrypt from "bcrypt";
 import { Op } from "sequelize";
 import Image from "../models/Image.js";
+import XLSX from "xlsx"; // Thêm thư viện xlsx để đọc file Excel
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from 'url';
+
 import dotenv from "dotenv";
 import axios from "axios";
 
 dotenv.config(); // Load environment variables
 
 const FACE_API = process.env.FACE_API || "http://localhost:5000"; // Địa chỉ API AI
+
+import { fileURLToPath } from "url";
+import Department from "../models/Department.js";
+import Position from "../models/Position.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,12 +28,12 @@ export const getAllStaff = async (req, res) => {
 
     const whereClause = name
       ? {
-        [Op.or]: [
-        { Fullname: { [Op.like]: `%${name}%` } },
-        { Code: { [Op.like]: `%${name}%` } },
-        { Email: { [Op.like]: `%${name}%` } },
-        ],
-      }
+          [Op.or]: [
+            { Fullname: { [Op.like]: `%${name}%` } },
+            { Code: { [Op.like]: `%${name}%` } },
+            { Email: { [Op.like]: `%${name}%` } },
+          ],
+        }
       : {};
     const limit = parseInt(pageSize, 10);
     const offset = (parseInt(page, 10) - 1) * limit;
@@ -36,7 +41,9 @@ export const getAllStaff = async (req, res) => {
     const { count, rows } = await Staff.findAndCountAll({
       where: whereClause,
       include: [
-        { model: Role, attributes: ["ID", "Name"] }, // Lấy thông tin Role
+        { model: Role, attributes: ["ID", "Name"] },
+        { model: Department, attributes: ["ID", "Name"] },
+        { model: Position, attributes: ["ID", "Name"] },
       ],
       limit,
       offset,
@@ -89,6 +96,8 @@ export const createStaff = async (req, res) => {
       Password,
       ConfirmPassword,
       RoleID,
+      DepartmentID,
+      PositionID,
     } = req.body;
 
     // Validate dữ liệu đầu vào
@@ -101,7 +110,9 @@ export const createStaff = async (req, res) => {
       !ConfirmPassword ||
       !Gender ||
       !DayOfBirth ||
-      !RoleID
+      !RoleID ||
+      !DepartmentID ||
+      !PositionID
     ) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
     }
@@ -142,6 +153,18 @@ export const createStaff = async (req, res) => {
       return res.status(400).json({ error: "Vai trò không tồn tại" });
     }
 
+    // Kiểm tra DepartmentID có tồn tại
+    const department = await Department.findByPk(DepartmentID);
+    if (!department) {
+      return res.status(400).json({ error: "Phòng ban không tồn tại" });
+    }
+
+    // Kiểm tra PositionID có tồn tại
+    const position = await Position.findByPk(PositionID);
+    if (!position) {
+      return res.status(400).json({ error: "Chức vụ không tồn tại" });
+    }
+
     // Băm mật khẩu
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(Password, salt);
@@ -156,6 +179,8 @@ export const createStaff = async (req, res) => {
       DayOfBirth,
       Password: hash,
       RoleID,
+      DepartmentID,
+      PositionID,
     });
 
     res.status(201).json(newStaff);
@@ -181,10 +206,20 @@ export const updateStaff = async (req, res) => {
       Password,
       ConfirmPassword,
       RoleID,
+      DepartmentID,
+      PositionID,
     } = req.body;
 
     // Validate dữ liệu đầu vào
-    if (!Fullname || !Code || !Email || !Username || !RoleID) {
+    if (
+      !Fullname ||
+      !Code ||
+      !Email ||
+      !Username ||
+      !RoleID ||
+      !DepartmentID ||
+      !PositionID
+    ) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
     }
 
@@ -216,6 +251,18 @@ export const updateStaff = async (req, res) => {
       return res.status(400).json({ error: "Vai trò không tồn tại" });
     }
 
+    // Kiểm tra DepartmentID có tồn tại
+    const department = await Department.findByPk(DepartmentID);
+    if (!department) {
+      return res.status(400).json({ error: "Phòng ban không tồn tại" });
+    }
+
+    // Kiểm tra PositionID có tồn tại
+    const position = await Position.findByPk(PositionID);
+    if (!position) {
+      return res.status(400).json({ error: "Chức vụ không tồn tại" });
+    }
+
     // Nếu có cập nhật mật khẩu
     let updatedPassword = staff.Password;
     if (Password) {
@@ -239,6 +286,8 @@ export const updateStaff = async (req, res) => {
       Username,
       Password: updatedPassword,
       RoleID,
+      DepartmentID,
+      PositionID,
     });
 
     res.json(staff);
@@ -304,6 +353,7 @@ export const addSampleImage = async (req, res) => {
     const timestamp = new Date().toISOString().replace(/:/g, "-");
     const fileName = `sample-image-${staffId}-${timestamp}.jpg`;
 
+
     const absolutePath = path.join(DATA_DIR, fileName); // để ghi file
     const relativePath = path.join("data", fileName).replace(/\\/g, "/"); // để lưu vào Mongo
 
@@ -345,7 +395,9 @@ export const getSampleImage = async (req, res) => {
 
     const imageObj = image.toObject();
 
-    imageObj.uploadedAt = new Date(imageObj.uploadedAt).toISOString().split("T")[0];
+    imageObj.uploadedAt = new Date(imageObj.uploadedAt)
+      .toISOString()
+      .split("T")[0];
 
     const response = {
       ...imageObj,
@@ -380,9 +432,11 @@ export const deleteImages = async (req, res) => {
       imageNames.some((imgName) => imgPath.includes(imgName))
     );
 
+
     if (imagesToDelete.length === 0) {
       return res.status(404).json({ message: "Không tìm thấy ảnh nào để xóa" });
     }
+
 
     for (let relativePath of imagesToDelete) {
       const fullPath = path.join(__dirname, "..", "..", relativePath);
@@ -394,6 +448,7 @@ export const deleteImages = async (req, res) => {
 
       // Xoá khỏi Mongo
       imageDoc.imagePaths = imageDoc.imagePaths.filter(p => p !== relativePath);
+
     }
 
     await imageDoc.save();
@@ -402,8 +457,209 @@ export const deleteImages = async (req, res) => {
       message: "Xóa ảnh thành công",
       deletedImages: imagesToDelete,
     });
+
   } catch (err) {
     console.error("Lỗi server:", err);
     return res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+// Hàm import nhân viên từ file Excel
+export const importStaffs = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Vui lòng tải lên file Excel" });
+    }
+
+    // Đọc file Excel
+    const filePath = req.file.path;
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+    const errors = [];
+    const createdStaffs = [];
+
+    for (let i = 0; i < jsonData.length; i++) {
+      const row = jsonData[i];
+      const rowNumber = i + 2; // +2 vì Excel bắt đầu từ hàng 1 và có header
+
+      // Validate các trường bắt buộc
+      const requiredFields = [
+        "Fullname",
+        "Code",
+        "Email",
+        "Username",
+        "Password",
+        "Gender",
+        "DayOfBirth",
+        "RoleName",
+        "DepartmentName",
+        "PositionName",
+      ];
+      for (const field of requiredFields) {
+        if (!row[field] || row[field].toString().trim() === "") {
+          errors.push(`Hàng ${rowNumber}: ${field} là bắt buộc`);
+          continue;
+        }
+      }
+
+      if (errors.length > 0) continue;
+
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(row.Email)) {
+        errors.push(`Hàng ${rowNumber}: Email không hợp lệ`);
+        continue;
+      }
+
+      // Validate password length
+      if (row.Password.length < 6) {
+        errors.push(`Hàng ${rowNumber}: Mật khẩu phải có ít nhất 6 ký tự`);
+        continue;
+      }
+
+      // Validate Gender
+      if (!["male", "female"].includes(row.Gender.toLowerCase())) {
+        errors.push(
+          `Hàng ${rowNumber}: Giới tính phải là 'male' hoặc 'female'`
+        );
+        continue;
+      }
+
+      // Xử lý DayOfBirth
+      let dayOfBirth;
+      if (typeof row.DayOfBirth === "number") {
+        // Nếu là số seri, chuyển đổi thành chuỗi YYYY-MM-DD
+        const excelDate = new Date(
+          (row.DayOfBirth - 25569) * 86400 * 1000 // Chuyển số seri Excel thành timestamp
+        );
+        dayOfBirth = excelDate.toISOString().split("T")[0]; // Lấy YYYY-MM-DD
+      } else if (typeof row.DayOfBirth === "string") {
+        // Nếu là chuỗi, kiểm tra định dạng MM-DD-YYYY
+        const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
+        if (!dateRegex.test(row.DayOfBirth)) {
+          errors.push(
+            `Hàng ${rowNumber}: Ngày sinh phải có định dạng MM-DD-YYYY`
+          );
+          continue;
+        }
+        // Chuyển MM-DD-YYYY thành YYYY-MM-DD để lưu vào database
+        const [month, day, year] = row.DayOfBirth.split("-");
+        dayOfBirth = `${year}-${month}-${day}`;
+      } else {
+        errors.push(`Hàng ${rowNumber}: Ngày sinh không hợp lệ`);
+        continue;
+      }
+
+      // Validate định dạng ngày sau khi chuyển đổi (YYYY-MM-DD)
+      const dateRegexISO = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegexISO.test(dayOfBirth)) {
+        errors.push(
+          `Hàng ${rowNumber}: Ngày sinh không hợp lệ sau khi chuyển đổi`
+        );
+        continue;
+      }
+
+      // Kiểm tra ngày hợp lệ
+      const date = new Date(dayOfBirth);
+      if (isNaN(date.getTime())) {
+        errors.push(`Hàng ${rowNumber}: Ngày sinh không hợp lệ`);
+        continue;
+      }
+
+      // Tìm kiếm RoleID từ RoleName
+      const role = await Role.findOne({ where: { Name: row.RoleName.trim() } });
+      if (!role) {
+        errors.push(
+          `Hàng ${rowNumber}: Vai trò '${row.RoleName}' không tồn tại`
+        );
+        continue;
+      }
+
+      // Tìm kiếm DepartmentID từ DepartmentName
+      const department = await Department.findOne({
+        where: { Name: row.DepartmentName.trim() },
+      });
+      if (!department) {
+        errors.push(
+          `Hàng ${rowNumber}: Phòng ban '${row.DepartmentName}' không tồn tại`
+        );
+        continue;
+      }
+
+      // Tìm kiếm PositionID từ PositionName
+      const position = await Position.findOne({
+        where: { Name: row.PositionName.trim() },
+      });
+      if (!position) {
+        errors.push(
+          `Hàng ${rowNumber}: Chức vụ '${row.PositionName}' không tồn tại`
+        );
+        continue;
+      }
+
+      // Kiểm tra username đã tồn tại
+      const existingUsername = await Staff.findOne({
+        where: { Username: row.Username },
+      });
+      if (existingUsername) {
+        errors.push(`Hàng ${rowNumber}: Username '${row.Username}' đã tồn tại`);
+        continue;
+      }
+
+      // Kiểm tra email đã tồn tại
+      const existingEmail = await Staff.findOne({
+        where: { Email: row.Email },
+      });
+      if (existingEmail) {
+        errors.push(`Hàng ${rowNumber}: Email '${row.Email}' đã tồn tại`);
+        continue;
+      }
+
+      // Băm mật khẩu
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(row.Password, salt);
+
+      // Tạo nhân viên mới
+      const newStaff = await Staff.create({
+        Fullname: row.Fullname,
+        Code: row.Code,
+        Email: row.Email,
+        Username: row.Username,
+        Password: hash,
+        Gender: row.Gender.toLowerCase(),
+        DayOfBirth: row.DayOfBirth,
+        RoleID: role.ID,
+        DepartmentID: department.ID,
+        PositionID: position.ID,
+      });
+
+      createdStaffs.push(newStaff);
+    }
+
+    // Xóa file tạm sau khi xử lý
+    fs.unlinkSync(filePath);
+
+    if (errors.length > 0) {
+      return res.status(400).json({
+        message: "Import hoàn tất với một số lỗi",
+        createdCount: createdStaffs.length,
+        errors,
+      });
+    }
+
+    res.status(201).json({
+      message: "Import nhân viên thành công",
+      createdCount: createdStaffs.length,
+      data: createdStaffs,
+    });
+  } catch (error) {
+    console.error("Error in importStaffs:", error);
+    if (fs.existsSync(req.file?.path)) {
+      fs.unlinkSync(req.file.path); // Xóa file tạm nếu có lỗi
+    }
+    res.status(500).json({ error: "Lỗi khi import nhân viên" });
   }
 };

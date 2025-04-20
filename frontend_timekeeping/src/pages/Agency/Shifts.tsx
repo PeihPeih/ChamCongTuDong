@@ -56,7 +56,7 @@ const Shift: React.FC = () => {
     });
     const [notificationApi, contextHolder] = notification.useNotification();
 
-    const fetchShifts = async (search?: string, page = 1, pageSize = 10) => {
+    const   fetchShifts = async (search?: string, page = 1, pageSize = 10) => {
         try {
             const response = await axios.get(`${API_URL}/api/shifts`, {
                 params: { name: search, page, pageSize },
