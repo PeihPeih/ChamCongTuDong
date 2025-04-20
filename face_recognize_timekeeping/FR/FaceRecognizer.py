@@ -77,3 +77,6 @@ class FaceRecognizer:
         except Exception as e:
             print(f"Error processing base64 image: {e}")
             return False
+        
+    def retrain_model(self, embeddings, labels):
+        pass

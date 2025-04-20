@@ -1,5 +1,8 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import Staff from "../models/Staff.js";
+import Image from "../models/Image.js";
+
 
 // Dùng để lấy __dirname khi dùng ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -27,3 +30,29 @@ export const getImage = async (req, res) => {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
+
+export const getAllImageAndStaffInfo = async (req, res) => {
+  try {
+    let response = [];
+
+    const imagesWithPaths = await Image.find({
+      imagePaths: { $exists: true, $ne: [] }
+    });
+
+    for (const image of imagesWithPaths) {
+      const staff = await Staff.findByPk(image.staffId);
+      if (staff) {
+        response.push({
+          staffName: staff.Fullname,
+          staffCode: staff.Code,
+          imagePaths: image.imagePaths
+        });
+      }
+    }
+    res.json({"data": response, "stt": 1000});
+
+  } catch (error) {
+    console.error("Lỗi trong getImage:", error);
+    res.json({ "stt": 1002, "data": null });
+  }
+}

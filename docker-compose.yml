@@ -1,0 +1,75 @@
+
+services:
+  frontend:
+    build:
+      context: ./frontend_timekeeping
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_BACKEND_HOST=http://backend
+      - REACT_APP_BACKEND_PORT=8888
+    networks:
+      - timekeeping_net
+
+
+  backend:
+    build:
+      context: ./backend_timekeeping
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    env_file:
+      - ./backend_timekeeping/.env
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - db_mysql
+      - db_mongo
+    networks:
+      - timekeeping_net
+
+  face_recognizer:
+    build:
+      context: ./face_recognize_timekeeping
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    networks:
+      - timekeeping_net
+
+  mqtt:
+    build:
+      context: ./mqtt_timekeeping
+      dockerfile: Dockerfile
+    ports:
+      - "1883:1883"
+    depends_on:
+      - backend
+
+  db_mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: timekeeping123
+      MYSQL_DATABASE: embedded_system
+    volumes:
+      - db_data:/var/lib/mysql
+
+  db_mongo:
+    image: mongo:5.0
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  db_data:
+  mongo_data:
+
+networks:
+  timekeeping_net:
+    driver: bridge
