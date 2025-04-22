@@ -17,9 +17,23 @@ class FaceRecognizer:
         self.threshold = threshold
         self.is_trained = False
 
-    def get_embedding(self, image_path):
+    def get_embedding(self, image_input):
         """Trích xuất embedding từ ảnh."""
-        img = Image.open(image_path)
+        if isinstance(image_input, str):
+        # Đường dẫn ảnh
+            img = Image.open(image_input).convert("RGB")
+        elif isinstance(image_input, (bytes, bytearray)):
+            # Dữ liệu ảnh dạng byte
+            img = Image.open(io.BytesIO(image_input)).convert("RGB")
+        elif hasattr(image_input, 'read'):
+            # File-like object (ví dụ BytesIO)
+            img = Image.open(image_input).convert("RGB")
+        elif isinstance(image_input, Image.Image):
+            # Đã là ảnh PIL
+            img = image_input.convert("RGB")
+        else:
+            raise TypeError(f"Unsupported image input type: {type(image_input)}")
+        
         img_cropped = self.mtcnn(img)
         if img_cropped is None:
             return None
@@ -33,18 +47,31 @@ class FaceRecognizer:
         self.knn.fit(embeddings, labels)
         self.is_trained = True
 
-    def predict(self, image_path):
-        """Dự đoán danh tính từ ảnh."""
-        embedding = self.get_embedding(image_path)
-        if embedding is None:
-            return "No face detected"
-        if not self.is_trained:
-            raise ValueError("Model not trained yet.")
-        distances, _ = self.knn.kneighbors([embedding])
-        min_distance = distances[0][0]
-        if min_distance <= self.threshold:
-            return self.knn.predict([embedding])[0]
-        return "unknown"
+    def predict(self, image_base64):
+        """Dự đoán danh tính từ chuỗi base64 của ảnh."""
+        try:
+            if ',' in image_base64:
+                image_base64 = image_base64.split(',')[1]
+            image_data = base64.b64decode(image_base64)
+
+            embedding = self.get_embedding(image_data)
+            if embedding is None:
+                return {"label": "no_face"}
+
+            if not self.is_trained:
+                raise ValueError("Model not trained yet.")
+
+            distances, _ = self.knn.kneighbors([embedding])
+            min_distance = distances[0][0]
+            predicted_label = self.knn.predict([embedding])[0]
+
+            if min_distance <= self.threshold:
+                return {"label": predicted_label}
+            return {"label": "unknown"}
+        except Exception as e:
+            print(f"Error predicting face: {e}")
+            return {"label": "error"}
+
 
     def save_model(self, path=f"{MODELS_PATH}/knn_model.pkl"):
         """Lưu mô hình KNN."""
@@ -67,16 +94,13 @@ class FaceRecognizer:
         return True
         
     def check_face_from_base64(self, image_base64):
-        """Kiểm tra xem ảnh từ chuỗi base64 có chứa khuôn mặt hay không."""
         try:
             if ',' in image_base64:
                 image_base64 = image_base64.split(',')[1]
             image_data = base64.b64decode(image_base64)
             image = Image.open(io.BytesIO(image_data))
-            return self.check_face(image)
+            if not self.check_face(image):
+                return False, "No face detected"
+            return True, "Valid face"
         except Exception as e:
-            print(f"Error processing base64 image: {e}")
-            return False
-        
-    def retrain_model(self, embeddings, labels):
-        pass
+            return False, f"Error processing image: {e}"

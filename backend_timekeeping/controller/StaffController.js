@@ -6,6 +6,7 @@ import Image from "../models/Image.js";
 import XLSX from "xlsx"; // Thêm thư viện xlsx để đọc file Excel
 import path from "path";
 import fs from "fs";
+import { publishMessage } from "../mqtt/mqttClient.js";
 
 import dotenv from "dotenv";
 import axios from "axios";
@@ -370,7 +371,7 @@ export const addSampleImage = async (req, res) => {
       });
       await newImage.save();
     }
-
+    publishMessage("topic/retrain_model", {});
     res.json({ message: "Cập nhật ảnh mẫu thành công!", path: relativePath });
   } catch (error) {
     console.error("Error in addSampleImage:", error);
@@ -452,7 +453,7 @@ export const deleteImages = async (req, res) => {
     }
 
     await imageDoc.save();
-
+    publishMessage("topic/retrain_model", {});
     return res.status(200).json({
       message: "Xóa ảnh thành công",
       deletedImages: imagesToDelete,
