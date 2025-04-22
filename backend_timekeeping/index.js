@@ -4,6 +4,7 @@ import sequelize from "./models/index.js"; // MySQL
 import mongoose from "mongoose"; // MongoDB
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import "./mqtt/mqttClient.js"; // MQTT
 
 // Import tất cả routes
 import staffRoutes from "./routes/StaffRoutes.js";
