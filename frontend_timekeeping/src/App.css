@@ -47,6 +47,15 @@
   background-color: #c6f9ba;
 }
 
+.has-clocked{
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
 body {
   overflow: auto;
 }

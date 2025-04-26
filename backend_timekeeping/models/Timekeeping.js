@@ -8,13 +8,12 @@ const Timekeeping = sequelize.define(
   {
     ID: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     Date: { type: DataTypes.DATE, allowNull: false },
-    Time_in: { type: DataTypes.STRING(255), allowNull: false },
-    Time_out: { type: DataTypes.STRING(255), allowNull: false },
+    Time_in: { type: DataTypes.STRING(255), allowNull: true },
+    Time_out: { type: DataTypes.STRING(255), allowNull: true },
   },
   { timestamps: false }
 );
 
 Timekeeping.belongsTo(Staff, { foreignKey: "StaffID" });
-Timekeeping.belongsTo(Shift, { foreignKey: "ShiftID" });
 
 export default Timekeeping; // Sử dụng export default thay vì module.exports
