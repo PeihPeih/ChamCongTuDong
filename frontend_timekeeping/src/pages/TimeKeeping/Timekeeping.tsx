@@ -10,17 +10,20 @@ import { API_URL } from "../../config/index";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
-interface Timekeeping {
-    ID: number;
-    StaffID: number;
-    Date: Date;
-    Time_in: string;
-    Time_out: string;
-    ShiftID: number;
-} 
+
+interface Worklog {
+    id: number;
+    staffID: number;
+    work_date: Date;
+    working_hours: number;
+    work_unit: number;
+}
+    
 
 const TimeManagement: React.FC = () => {
-    const [timekeepingData, setTimekeepingData] = useState<Timekeeping[]>([]);
+    const userStr = localStorage.getItem("user");
+    const userId = userStr ? JSON.parse(userStr).ID : null;
+    const [worklog, setWorklog] = useState<Worklog[]>([]);
     const [currentDate, setCurrentDate] = useState(dayjs()); // Sử dụng dayjs
 
     const dateCellRender = (date: any) => {
@@ -31,31 +34,31 @@ const TimeManagement: React.FC = () => {
         const FORMAT = "YYYY-MM-DD";
 
         const currentDate = dayjs(`${year}-${month}-${day}`).format(FORMAT);
-        const hasTimekeeping = timekeepingData.some((record) => {
-            const recordDate = dayjs(record.Date).format(FORMAT); // Sử dụng dayjs
+        const worklogRecord = worklog.find((record) => {
+            const recordDate = dayjs(record.work_date).format(FORMAT);
             return recordDate === currentDate;
         });
 
-        if (hasTimekeeping) {
-            return <div className="has-clocked"></div>;
+        if (worklogRecord) {
+            return <div className="has-clocked">{worklogRecord.work_unit}</div>;
         }
         return <div></div>; 
     };
 
-    const getTimeKeeping = async (year: any, month: any) => {
+    const getWorklog = async (year: any, month: any) => {
         try{
-            const response = await fetch(`${API_URL}/api/timekeepings/staff/16?year=${year}&month=${month}`);
+            const response = await fetch(`${API_URL}/api/worklogs/staff/${userId}?year=${year}&month=${month}`);
             if (response.ok) {
-                const data = await response.json();
-                const timekeepings = data.map((item: any) => ({
-                    ID: item.ID,
-                    StaffID: item.StaffID,
-                    Date: item.Date,
-                    Time_in: item.Time_in,
-                    Time_out: item.Time_out,
-                    ShiftID: item.ShiftID
+                const jsonData = await response.json();
+                const worklogs = jsonData.data;
+                const formattedWorklogs = worklogs.map((log: Worklog) => ({
+                    id: log.id,
+                    staffID: log.staffID,
+                    work_date: log.work_date,
+                    working_hours: log.working_hours,
+                    work_unit: log.work_unit,
                 }));
-                setTimekeepingData(timekeepings);
+                setWorklog(formattedWorklogs);
             }
         } catch (error) {
             console.error("Failed to get timekeeping data: ", error);
@@ -68,7 +71,7 @@ const TimeManagement: React.FC = () => {
             const month = String(date.month() + 1).padStart(2, '0');
             setCurrentDate(date); // cập nhật tháng hiện tại khi người dùng thay đổi
             try {
-                await getTimeKeeping(year, month);
+                await getWorklog(year, month);
             } catch (error) {
                 console.error('Lỗi khi lấy dữ liệu chấm công:', error);
             }
@@ -81,7 +84,7 @@ const TimeManagement: React.FC = () => {
         const month = String(now.month() + 1).padStart(2, '0');
         setCurrentDate(now); // khởi tạo tháng hiện tại
         try {
-            await getTimeKeeping(year, month);
+            await getWorklog(year, month);
         } catch (error) {
             console.error('Lỗi khi lấy dữ liệu chấm công:', error);
         }

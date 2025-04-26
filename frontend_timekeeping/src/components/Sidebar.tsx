@@ -55,6 +55,12 @@ const Sidebar: React.FC = () => {
       path: "/timesheet",
     },
     {
+      key: "9",
+      icon: <CalendarOutlined />,
+      label: <Link to="/history">Lịch sử vào ra</Link>,
+      path: "/history",
+    },
+    {
       key: "2",
       icon: <ApartmentOutlined />,
       label: "Cơ quan",
@@ -91,24 +97,6 @@ const Sidebar: React.FC = () => {
       icon: <CameraOutlined />,
       label: <Link to="/staff/image-capture">Lấy mẫu khuôn mặt</Link>,
       path: "/staff/image-capture",
-    },
-    {
-      key: "4",
-      icon: <FileTextOutlined />,
-      label: "Quản lý đơn từ",
-      path: "/document-management",
-      children: [
-        {
-          key: "4-1",
-          label: <Link to="/Dayoffs">Danh sách đơn từ</Link>,
-          path: "/Dayoffs",
-        },
-        {
-          key: "4-2",
-          label: <Link to="/Dayoff-types">Loại đơn từ</Link>,
-          path: "/Dayoff-types",
-        },
-      ],
     },
     {
       key: "5",

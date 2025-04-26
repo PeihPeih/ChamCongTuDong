@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Staff from "../models/Staff.js";
+import Role from "../models/Role.js";
+
 export const register = async (req, res) => {
   try {
     console.log(req.body);
@@ -154,6 +156,39 @@ export const changePassword = async (req, res) => {
     return res.status(200).json({ success: true, message: "Đổi mật khẩu thành công!" });
   } catch (error) {
     return res.status(500).json({ success: false, message: `Lỗi: ${error.message}` });
+  }
+};
+
+export const getUserInfo = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const staff = await Staff.findOne({
+      where: { ID: userId },
+      attributes: { exclude: ['Password'] }, // Exclude password from response
+      include: [
+        {
+          model: Role,
+          attributes: ['Name']
+        }
+      ]
+    });
+
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: staff
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Error: ${error.message}`
+    });
   }
 };
 

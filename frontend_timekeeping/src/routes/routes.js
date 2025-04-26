@@ -8,6 +8,7 @@ import Shifts from "../pages/Agency/Shifts";
 import OverView from "../pages/overview/Overview";
 import TimeManagement from "../pages/TimeKeeping/Timekeeping";
 import Dayoffs from "../pages/Dayoffs/Dayoffs";
+import History from "../pages/History/History";
 import DayoffTypes from "../pages/Dayoff-type/Dayoff-type";
 import Reports from "../pages/reports/Reports";
 // Import các component mới cho Role và Account
@@ -31,6 +32,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/overview" replace />} />
         <Route path="/overview" element={<OverView />} />
         <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/history" element={<History />} />
         <Route path="/timesheet" element={<TimeManagement />} />
         <Route>
           <Route path="/dayoffs" element={<Dayoffs />} />

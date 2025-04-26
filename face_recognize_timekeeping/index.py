@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from mqtt.mqtt_client import setup_mqtt
 import asyncio
+import json
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,21 +50,34 @@ async def check_face_base64(image_base64: str = Body(..., embed=True)):
         return {"message": "Có lỗi xảy ra khi kiểm tra khuôn mặt", "error": str(e), "stt": 1002}
     
 @app.post("/api/recognize-face")
-async def recognize_face(image_base64: str = Body(..., embed=True)):
+async def recognize_face(image_base64: str = Body(..., embed=True), timestamp: str = Body(..., embed=True)):
+    stt, data = 1000, None
     try:
-        has_face, message = recognizer.check_face(image_base64)
+        has_face, _ = recognizer.check_face(image_base64)
         if not has_face:
-            return {"message": message, "stt": 1001}
+            stt = 1004
 
         result = recognizer.predict(image_base64)
-
-        return {
-            "message": "Nhận diện khuôn mặt thành công",
-            "stt": 1000,
-            "data": {
+        if result["label"] == "unknown":
+            stt = 1001
+            data = {
                 "label": result["label"],
+                "timestamp": timestamp,
             }
+
+        stt = 1000
+        data = {
+            "label": result["label"],
+            "timestamp": timestamp,
         }
+
+        payload = json.dumps({"stt": stt, "data": data})
+
+        mqtt_client.publish("topic/face-recognize/result", payload)
     except Exception as e:
-        print(f"Error recognizing face: {e}")
-        return {"message": "Có lỗi xảy ra khi nhận diện khuôn mặt", "error": str(e), "stt": 1002}
+        print(f"Error recognizing face: {e}")    
+        stt = 1002
+    return {
+        "data": data,
+        "stt": stt
+    }
