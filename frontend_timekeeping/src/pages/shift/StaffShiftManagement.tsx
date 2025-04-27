@@ -4,7 +4,6 @@ import {
     RestOutlined,
     SearchOutlined,
     UserOutlined,
-    CalendarOutlined,
 } from "@ant-design/icons";
 import {
     Button,
@@ -23,11 +22,8 @@ import {
     Tabs,
     Empty,
     Card,
-    Collapse,
     List,
     Typography,
-    Tooltip,
-    Divider,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -35,7 +31,7 @@ import MainLayout from "../../layouts/MainLayout";
 import { ColumnType } from "antd/es/table";
 import { API_URL } from "../../config/index";
 
-// Định nghĩa kiểu cho Staff
+// Định nghĩa kiểu dữ liệu
 interface Staff {
     ID: number;
     Fullname: string;
@@ -50,7 +46,6 @@ interface Staff {
     key?: number;
 }
 
-// Định nghĩa kiểu cho Shift
 interface Shift {
     ID: number;
     Name: string;
@@ -66,7 +61,6 @@ interface Shift {
     key?: number;
 }
 
-// Định nghĩa kiểu cho StaffShift
 interface StaffShift {
     ID: number;
     StaffID: number;
@@ -77,7 +71,6 @@ interface StaffShift {
     key?: number;
 }
 
-// Định nghĩa kiểu cho nhóm nhân viên với ca làm
 interface StaffWithShifts {
     staff: Staff;
     shifts: Shift[];
@@ -87,8 +80,7 @@ interface StaffWithShifts {
 const { Content } = Layout;
 const { Option } = Select;
 const { TabPane } = Tabs;
-const { Panel } = Collapse;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const StaffShiftManagement: React.FC = () => {
     const [staffShifts, setStaffShifts] = useState<StaffShift[]>([]);
@@ -109,8 +101,46 @@ const StaffShiftManagement: React.FC = () => {
         pageSize: 10,
         total: 0,
     });
+    const [shiftPagination, setShiftPagination] = useState<TablePaginationConfig>({
+        current: 1,
+        pageSize: 10,
+        total: 0,
+    });
     const [loading, setLoading] = useState<boolean>(false);
     const [notificationApi, contextHolder] = notification.useNotification();
+
+    // Lấy danh sách ca làm việc
+    const fetchShifts = async (search?: string, page = 1, pageSize = 10) => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`${API_URL}/api/shifts`, {
+                params: { name: search, page, pageSize },
+            });
+            const { data, pagination: paginationData } = response.data;
+            setShifts(
+                data.map((shift: Shift, index: number) => ({
+                    ...shift,
+                    stt: (page - 1) * pageSize + index + 1,
+                    key: shift.ID,
+                }))
+            );
+            setShiftPagination({
+                current: paginationData.page,
+                pageSize: paginationData.pageSize,
+                total: paginationData.total,
+            });
+        } catch (error: any) {
+            console.error("Error fetching shifts:", error);
+            notificationApi.error({
+                message: "Lỗi khi lấy danh sách ca làm việc",
+                description: error.response?.data?.error || "Không thể tải danh sách ca làm việc.",
+                placement: "topRight",
+            });
+            setShifts([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Lấy danh sách phân công ca làm việc
     const fetchStaffShifts = async (staffId?: number, shiftId?: number, search?: string, page = 1, pageSize = 10) => {
@@ -122,11 +152,9 @@ const StaffShiftManagement: React.FC = () => {
             if (search) params.name = search;
 
             const response = await axios.get(`${API_URL}/api/staffshift`, { params });
-            
-            // Xử lý dữ liệu trả về
             let staffShiftsData = [];
             let paginationData = { page, pageSize, total: 0, totalPages: 0 };
-            
+
             if (response.data && response.data.data) {
                 staffShiftsData = response.data.data;
                 if (response.data.pagination) {
@@ -135,15 +163,14 @@ const StaffShiftManagement: React.FC = () => {
             } else if (Array.isArray(response.data)) {
                 staffShiftsData = response.data;
             }
-            
+
             const mappedData = staffShiftsData.map((staffShift: StaffShift, index: number) => ({
                 ...staffShift,
                 stt: (page - 1) * pageSize + index + 1,
                 key: staffShift.ID,
             }));
-            
+
             setStaffShifts(mappedData);
-            
             setPagination({
                 current: paginationData.page,
                 pageSize: paginationData.pageSize,
@@ -159,7 +186,7 @@ const StaffShiftManagement: React.FC = () => {
                 description: error.response?.data?.error || "Không thể tải danh sách phân công ca làm việc.",
                 placement: "topRight",
             });
-            setStaffShifts([]); // Đặt mảng rỗng khi có lỗi
+            setStaffShifts([]);
             setGroupedData([]);
         } finally {
             setLoading(false);
@@ -169,11 +196,9 @@ const StaffShiftManagement: React.FC = () => {
     // Nhóm dữ liệu theo nhân viên
     const groupDataByStaff = (data: StaffShift[]) => {
         const staffMap = new Map<number, StaffWithShifts>();
-        
         data.forEach(staffShift => {
             if (staffShift.Staff && staffShift.Shift) {
                 const staffId = staffShift.Staff.ID;
-                
                 if (!staffMap.has(staffId)) {
                     staffMap.set(staffId, {
                         staff: staffShift.Staff,
@@ -181,7 +206,6 @@ const StaffShiftManagement: React.FC = () => {
                         staffShifts: []
                     });
                 }
-                
                 const staffGroup = staffMap.get(staffId);
                 if (staffGroup) {
                     staffGroup.shifts.push(staffShift.Shift);
@@ -189,7 +213,6 @@ const StaffShiftManagement: React.FC = () => {
                 }
             }
         });
-        
         setGroupedData(Array.from(staffMap.values()));
     };
 
@@ -197,17 +220,12 @@ const StaffShiftManagement: React.FC = () => {
     const fetchStaffs = async () => {
         try {
             const response = await axios.get(`${API_URL}/api/staffs`);
-            
-            // Xử lý dữ liệu trả về
             let staffsData = [];
-            
             if (response.data && response.data.data && Array.isArray(response.data.data)) {
                 staffsData = response.data.data;
             } else if (Array.isArray(response.data)) {
                 staffsData = response.data;
             }
-            
-            console.log("Staff data:", staffsData); // Debug log
             setStaffs(staffsData);
         } catch (error: any) {
             console.error("Error fetching staffs:", error);
@@ -216,34 +234,7 @@ const StaffShiftManagement: React.FC = () => {
                 description: error.response?.data?.error || "Không thể tải danh sách nhân viên.",
                 placement: "topRight",
             });
-            setStaffs([]); // Đặt mảng rỗng khi có lỗi
-        }
-    };
-
-    // Lấy danh sách ca làm việc
-    const fetchShifts = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/api/shifts`);
-            
-            // Xử lý dữ liệu trả về
-            let shiftsData = [];
-            
-            if (response.data && response.data.data && Array.isArray(response.data.data)) {
-                shiftsData = response.data.data;
-            } else if (Array.isArray(response.data)) {
-                shiftsData = response.data;
-            }
-            
-            console.log("Shifts data:", shiftsData); // Debug log
-            setShifts(shiftsData);
-        } catch (error: any) {
-            console.error("Error fetching shifts:", error);
-            notificationApi.error({
-                message: "Lỗi khi lấy danh sách ca làm việc",
-                description: error.response?.data?.error || "Không thể tải danh sách ca làm việc.",
-                placement: "topRight",
-            });
-            setShifts([]); // Đặt mảng rỗng khi có lỗi
+            setStaffs([]);
         }
     };
 
@@ -256,6 +247,11 @@ const StaffShiftManagement: React.FC = () => {
     const handleSearch = (value: string) => {
         setSearchValue(value);
         fetchStaffShifts(selectedStaff || undefined, selectedShift || undefined, value, 1, pagination.pageSize);
+    };
+
+    const handleShiftSearch = (value: string) => {
+        setSearchValue(value);
+        fetchShifts(value, shiftPagination.current, shiftPagination.pageSize);
     };
 
     const handleStaffChange = (value: number | null) => {
@@ -276,6 +272,10 @@ const StaffShiftManagement: React.FC = () => {
             newPagination.current,
             newPagination.pageSize
         );
+    };
+
+    const handleShiftTableChange = (newPagination: TablePaginationConfig) => {
+        fetchShifts(searchValue, newPagination.current, newPagination.pageSize);
     };
 
     const showAddModal = () => {
@@ -301,14 +301,12 @@ const StaffShiftManagement: React.FC = () => {
                 ShiftID: values.ShiftID,
             };
 
-            const response = await axios.post<StaffShift>(`${API_URL}/api/staffshift`, payload);
-            
+            await axios.post<StaffShift>(`${API_URL}/api/staffshift`, payload);
             notificationApi.success({
                 message: "Thêm ca làm việc",
                 description: "Ca làm việc đã được thêm thành công.",
                 placement: "topRight",
             });
-            
             setIsAddShiftModalVisible(false);
             fetchStaffShifts(
                 selectedStaff || undefined,
@@ -321,8 +319,7 @@ const StaffShiftManagement: React.FC = () => {
             console.error("Error adding shift:", error);
             notificationApi.error({
                 message: "Lỗi khi thêm ca làm việc",
-                description:
-                    error.response?.data?.error || "Không thể thêm ca làm việc.",
+                description: error.response?.data?.error || "Không thể thêm ca làm việc.",
                 placement: "topRight",
             });
         }
@@ -352,26 +349,23 @@ const StaffShiftManagement: React.FC = () => {
             };
 
             if (editingStaffShift) {
-                const response = await axios.put<StaffShift>(
+                await axios.put<StaffShift>(
                     `${API_URL}/api/staffshift/${editingStaffShift.ID}`,
                     payload
                 );
-                
                 notificationApi.success({
                     message: "Cập nhật phân công ca làm việc",
                     description: "Phân công ca làm việc đã được cập nhật thành công.",
                     placement: "topRight",
                 });
             } else {
-                const response = await axios.post<StaffShift>(`${API_URL}/api/staffshift`, payload);
-                
+                await axios.post<StaffShift>(`${API_URL}/api/staffshift`, payload);
                 notificationApi.success({
                     message: "Thêm phân công ca làm việc",
                     description: "Phân công ca làm việc đã được thêm thành công.",
                     placement: "topRight",
                 });
             }
-            
             setIsModalVisible(false);
             fetchStaffShifts(
                 selectedStaff || undefined,
@@ -384,8 +378,7 @@ const StaffShiftManagement: React.FC = () => {
             console.error("Error saving staff shift:", error);
             notificationApi.error({
                 message: "Lỗi khi lưu phân công ca làm việc",
-                description:
-                    error.response?.data?.error || "Không thể lưu phân công ca làm việc.",
+                description: error.response?.data?.error || "Không thể lưu phân công ca làm việc.",
                 placement: "topRight",
             });
         }
@@ -394,13 +387,11 @@ const StaffShiftManagement: React.FC = () => {
     const handleDelete = async (id: number) => {
         try {
             await axios.delete(`${API_URL}/api/staffshift/${id}`);
-            
             notificationApi.success({
                 message: "Xóa phân công ca làm việc",
                 description: "Phân công ca làm việc đã được xóa thành công.",
                 placement: "topRight",
             });
-            
             fetchStaffShifts(
                 selectedStaff || undefined,
                 selectedShift || undefined,
@@ -412,8 +403,7 @@ const StaffShiftManagement: React.FC = () => {
             console.error("Error deleting staff shift:", error);
             notificationApi.error({
                 message: "Lỗi khi xóa phân công ca làm việc",
-                description:
-                    error.response?.data?.error || "Không thể xóa phân công ca làm việc.",
+                description: error.response?.data?.error || "Không thể xóa phân công ca làm việc.",
                 placement: "topRight",
             });
         }
@@ -429,15 +419,14 @@ const StaffShiftManagement: React.FC = () => {
     const renderShiftItem = (staffShift: StaffShift, shift: Shift) => {
         const shiftType = String(shift.Type_shift);
         const color = shiftType === "1" ? "blue" : "purple";
-        
         return (
             <List.Item
                 key={staffShift.ID}
                 actions={[
-                    <Button 
-                        type="text" 
-                        danger 
-                        icon={<RestOutlined />} 
+                    <Button
+                        type="text"
+                        danger
+                        icon={<RestOutlined />}
                         onClick={() => handleDelete(staffShift.ID)}
                     />
                 ]}
@@ -455,11 +444,10 @@ const StaffShiftManagement: React.FC = () => {
 
     // Render từng khối nhân viên với danh sách ca
     const renderStaffCard = (item: StaffWithShifts) => {
-        const { staff, shifts, staffShifts } = item;
-        
+        const { staff, staffShifts } = item;
         return (
-            <Card 
-                key={staff.ID} 
+            <Card
+                key={staff.ID}
                 title={
                     <Space>
                         <UserOutlined />
@@ -468,9 +456,9 @@ const StaffShiftManagement: React.FC = () => {
                     </Space>
                 }
                 extra={
-                    <Button 
-                        type="primary" 
-                        icon={<PlusOutlined />} 
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
                         onClick={() => showAddShiftModal(staff)}
                     >
                         Thêm ca
@@ -481,7 +469,7 @@ const StaffShiftManagement: React.FC = () => {
                 <List
                     itemLayout="horizontal"
                     dataSource={staffShifts}
-                    renderItem={(staffShift, index) => 
+                    renderItem={(staffShift, index) =>
                         staffShift.Shift ? renderShiftItem(staffShift, staffShift.Shift) : null
                     }
                     locale={{ emptyText: "Chưa có ca làm việc nào" }}
@@ -490,64 +478,53 @@ const StaffShiftManagement: React.FC = () => {
         );
     };
 
-    const columns: ColumnType<StaffShift>[] = [
+    // Cột cho bảng ca làm việc
+    const shiftColumns: ColumnType<Shift>[] = [
         {
             title: "STT",
             dataIndex: "stt",
             key: "stt",
-            width: 80,
         },
         {
-            title: "Nhân viên",
-            dataIndex: ["Staff", "Fullname"],
-            key: "Staff",
-            render: (_, record) => record.Staff?.Fullname || "N/A",
+            title: "Tên ca",
+            dataIndex: "Name",
+            key: "Name",
         },
         {
-            title: "Mã nhân viên",
-            dataIndex: ["Staff", "Code"],
-            key: "StaffCode",
-            render: (_, record) => record.Staff?.Code || "N/A",
+            title: "Giờ vào",
+            dataIndex: "Time_in",
+            key: "Time_in",
         },
         {
-            title: "Tên ca làm việc",
-            dataIndex: ["Shift", "Name"],
-            key: "Shift",
-            render: (_, record) => record.Shift?.Name || "N/A",
-        },
-        {
-            title: "Thời gian bắt đầu",
-            dataIndex: ["Shift", "Time_in"],
-            key: "TimeIn",
-            render: (_, record) => record.Shift?.Time_in || "N/A",
-        },
-        {
-            title: "Thời gian kết thúc",
-            dataIndex: ["Shift", "Time_out"],
-            key: "TimeOut",
-            render: (_, record) => record.Shift?.Time_out || "N/A",
+            title: "Giờ ra",
+            dataIndex: "Time_out",
+            key: "Time_out",
         },
         {
             title: "Loại ca",
-            dataIndex: ["Shift", "Type_shift"],
-            key: "TypeShift",
-            render: (type, record) => {
-                if (!record.Shift?.Type_shift) return "N/A";
-                const Type:string|number = record.Shift.Type_shift;
-                const shiftType = String(Type);
-                const color = shiftType === "1" ? "blue" : "purple";
-                return <Tag color={color}>{shiftType === "1" ? "Ca sáng" : "Ca tối"}</Tag>;
+            dataIndex: "Type_shift",
+            key: "Type_shift",
+            render: (type: number) => {
+                const typeMap: { [key: number]: string } = {
+                    1: "Ca ngày",
+                    2: "Ca đêm",
+                };
+                return typeMap[type] || "Không xác định";
             },
         },
         {
-            title: "Tác vụ",
-            key: "action",
-            width: 120,
-            render: (_: any, record: StaffShift) => (
-                <Space size="middle">
-                    <Button icon={<RestOutlined />} onClick={() => handleDelete(record.ID)} />
-                </Space>
-            ),
+            title: "Mặc định",
+            dataIndex: "Is_default",
+            key: "Is_default",
+            render: (state: number) => {
+                const color = state === 1 ? "green" : "gray";
+                return <Tag color={color}>{state === 1 ? "Có" : "Không"}</Tag>;
+            },
+        },
+        {
+            title: "Tổng thời gian",
+            dataIndex: "Total_time",
+            key: "Total_time",
         },
     ];
 
@@ -555,7 +532,42 @@ const StaffShiftManagement: React.FC = () => {
         <MainLayout title="Quản lý ca làm việc của nhân viên">
             {contextHolder}
             <Tabs defaultActiveKey="1">
-                <TabPane tab="Phân công ca làm việc" key="1">
+                <TabPane tab="Danh sách ca làm việc" key="1">
+                    <Row gutter={16} style={{ marginTop: "16px" }}>
+                        <Col span={12}>
+                            <Input
+                                placeholder="Tìm kiếm theo tên ca"
+                                value={searchValue}
+                                onChange={(e) => handleShiftSearch(e.target.value)}
+                                prefix={<SearchOutlined />}
+                                style={{ width: "100%" }}
+                            />
+                        </Col>
+                    </Row>
+                    <Content style={{ margin: "16px" }}>
+                        <Table
+                            dataSource={shifts}
+                            columns={shiftColumns}
+                            pagination={{
+                                current: shiftPagination.current,
+                                pageSize: shiftPagination.pageSize,
+                                total: shiftPagination.total,
+                                pageSizeOptions: ["5", "10", "20", "50"],
+                                showSizeChanger: true,
+                                onChange: (page, pageSize) =>
+                                    handleShiftTableChange({ current: page, pageSize }),
+                                locale: {
+                                    items_per_page: "/ trang",
+                                },
+                            }}
+                            loading={loading}
+                            locale={{
+                                emptyText: <Empty description="Không có dữ liệu ca làm việc" />
+                            }}
+                        />
+                    </Content>
+                </TabPane>
+                <TabPane tab="Phân công ca làm việc" key="2">
                     <Row gutter={16} style={{ marginTop: "16px" }}>
                         <Col span={6}>
                             <Select
@@ -605,8 +617,8 @@ const StaffShiftManagement: React.FC = () => {
                             </>
                         )}
                     </Content>
-                    
-                    {/* Modal thêm phân công ca làm việc */}
+
+                    {/* Modal thêm/sửa phân công ca làm việc */}
                     <Modal
                         title="Phân công ca làm việc"
                         visible={isModalVisible}
@@ -676,7 +688,7 @@ const StaffShiftManagement: React.FC = () => {
                             </Row>
                         </Form>
                     </Modal>
-                    
+
                     {/* Modal thêm ca làm việc cho nhân viên */}
                     <Modal
                         title={`Thêm ca làm việc cho ${selectedStaffForShift?.Fullname || ''}`}
@@ -706,14 +718,12 @@ const StaffShiftManagement: React.FC = () => {
                                         >
                                             {Array.isArray(shifts) && shifts.length > 0 ? (
                                                 shifts.map((shift) => {
-                                                    // Kiểm tra xem ca này đã được gán cho nhân viên chưa
                                                     const isAssigned = staffShifts.some(
                                                         ss => ss.StaffID === selectedStaffForShift?.ID && ss.ShiftID === shift.ID
                                                     );
-                                                    
                                                     return (
-                                                        <Option 
-                                                            key={shift.ID} 
+                                                        <Option
+                                                            key={shift.ID}
                                                             value={shift.ID}
                                                             disabled={isAssigned}
                                                         >
@@ -740,52 +750,6 @@ const StaffShiftManagement: React.FC = () => {
                             </Row>
                         </Form>
                     </Modal>
-                </TabPane>
-                <TabPane tab="Danh sách nhân viên theo ca" key="2">
-                    <Row gutter={16} style={{ marginTop: "16px" }}>
-                        <Col span={6}>
-                            <Select
-                                placeholder="Chọn ca làm việc"
-                                style={{ width: "100%" }}
-                                onChange={handleShiftChange}
-                                allowClear
-                                showSearch
-                                optionFilterProp="children"
-                            >
-                                {Array.isArray(shifts) && shifts.length > 0 ? (
-                                    shifts.map((shift) => (
-                                        <Option key={shift.ID} value={shift.ID}>
-                                            {shift.Name} ({shift.Type_shift === "1" ? "Ca sáng" : "Ca tối"})
-                                        </Option>
-                                    ))
-                                ) : (
-                                    <Option value="" disabled>Không có dữ liệu</Option>
-                                )}
-                            </Select>
-                        </Col>
-                    </Row>
-                    <Content style={{ margin: "16px" }}>
-                        <Table
-                            dataSource={staffShifts}
-                            columns={columns.filter((col) => col.key !== "action")}
-                            pagination={{
-                                current: pagination.current,
-                                pageSize: pagination.pageSize,
-                                total: pagination.total,
-                                pageSizeOptions: ["5", "10", "20", "50"],
-                                showSizeChanger: true,
-                                onChange: (page, pageSize) =>
-                                    handleTableChange({ current: page, pageSize }),
-                                locale: {
-                                    items_per_page: "/ trang",
-                                },
-                            }}
-                            loading={loading}
-                            locale={{
-                                emptyText: <Empty description="Không có dữ liệu" />
-                            }}
-                        />
-                    </Content>
                 </TabPane>
             </Tabs>
         </MainLayout>

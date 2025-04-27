@@ -90,6 +90,11 @@ const Sidebar: React.FC = () => {
           label: <Link to="/roles">Quyền</Link>,
           path: "/roles",
         },
+        {
+          key:"2-6",
+          label:<Link to="/staffshift-management">Quản lí ca người dùng</Link>,
+          path:"/staffshift-management"
+        }
       ],
     },
     {
