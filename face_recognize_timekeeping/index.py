@@ -51,32 +51,30 @@ async def check_face_base64(image_base64: str = Body(..., embed=True)):
     
 @app.post("/api/recognize-face")
 async def recognize_face(image_base64: str = Body(..., embed=True), timestamp: str = Body(..., embed=True)):
+    return await process_face_recognition(image_base64, timestamp)
+
+async def process_face_recognition(image_base64: str, timestamp: str):
     stt, data = 1000, None
     try:
         has_face, _ = recognizer.check_face(image_base64)
         if not has_face:
             stt = 1004
-
-        result = recognizer.predict(image_base64)
-        if result["label"] == "unknown":
-            stt = 1001
+            data = {"label": "no_face", "timestamp": timestamp}
+        else:
+            result = recognizer.predict(image_base64)
+            if result["label"] == "unknown":
+                stt = 1001
             data = {
                 "label": result["label"],
                 "timestamp": timestamp,
             }
 
-        stt = 1000
-        data = {
-            "label": result["label"],
-            "timestamp": timestamp,
-        }
-
         payload = json.dumps({"stt": stt, "data": data})
-
         mqtt_client.publish("topic/face-recognize/result", payload)
     except Exception as e:
-        print(f"Error recognizing face: {e}")    
+        print(f"Error recognizing face: {e}")
         stt = 1002
+        data = {"label": "error", "timestamp": timestamp}
     return {
         "data": data,
         "stt": stt

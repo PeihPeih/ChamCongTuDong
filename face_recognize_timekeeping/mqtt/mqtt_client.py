@@ -4,6 +4,7 @@ import json
 import os
 import asyncio
 from FR.FaceService import FaceRecognitionService
+import index
 
 MQTT_HOST = os.getenv("MQTT_HOST")
 MQTT_PORT = 8883
@@ -14,6 +15,7 @@ def setup_mqtt(recognizer: FaceRecognitionService):
     def on_connect(client, userdata, flags, rc):
         print("Connected to MQTT broker")
         client.subscribe("topic/retrain_model")
+        client.subscribe("topic/recognize_auth")  # Đăng ký thêm topic recognize_auth
 
     def on_message(client, userdata, msg):
         print(f"Message on {msg.topic}: {msg.payload.decode()}")
@@ -22,7 +24,16 @@ def setup_mqtt(recognizer: FaceRecognitionService):
         asyncio.set_event_loop(loop)
 
         try:
-            loop.run_until_complete(recognizer.retrain_model())
+            if msg.topic == "topic/retrain_model":
+                loop.run_until_complete(recognizer.retrain_model())
+            elif msg.topic == "topic/recognize_auth":
+                payload = json.loads(msg.payload.decode())
+                image_base64 = payload.get("image_base64")
+                timestamp = payload.get("timestamp")
+                if image_base64 and timestamp:
+                    asyncio.run(index.process_face_recognition(image_base64, timestamp))
+                else:
+                    print("Invalid payload: missing image_base64 or timestamp")
         finally:
             loop.close()
 
