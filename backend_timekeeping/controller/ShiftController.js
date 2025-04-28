@@ -145,6 +145,7 @@ export const createShift = async (req, res) => {
 
     res.status(201).json(shift);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "Lỗi khi tạo ca làm việc" });
   }
 };
