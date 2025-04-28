@@ -37,8 +37,6 @@ export const createShift = async (req, res) => {
       Name,
       Time_in,
       Time_out,
-      Start_time_of,
-      End_time_of,
       Is_default,
       Type_shift,
       Start_date,
@@ -54,16 +52,6 @@ export const createShift = async (req, res) => {
     }
     if (!Time_out) {
       return res.status(400).json({ error: "Thời gian kết thúc là bắt buộc" });
-    }
-    if (!Start_time_of) {
-      return res
-        .status(400)
-        .json({ error: "Thời gian bắt đầu nghỉ trưa là bắt buộc" });
-    }
-    if (!End_time_of) {
-      return res
-        .status(400)
-        .json({ error: "Thời gian kết thúc nghỉ trưa là bắt buộc" });
     }
     if (Is_default === undefined || Is_default === null) {
       return res.status(400).json({ error: "Trường Is_default là bắt buộc" });
@@ -94,16 +82,6 @@ export const createShift = async (req, res) => {
         .status(400)
         .json({ error: "Thời gian kết thúc phải có định dạng HH:mm" });
     }
-    if (!timeFormatRegex.test(Start_time_of)) {
-      return res
-        .status(400)
-        .json({ error: "Thời gian bắt đầu nghỉ trưa phải có định dạng HH:mm" });
-    }
-    if (!timeFormatRegex.test(End_time_of)) {
-      return res.status(400).json({
-        error: "Thời gian kết thúc nghỉ trưa phải có định dạng HH:mm",
-      });
-    }
 
     // Kiểm tra logic thời gian
     const timeToMinutes = (time) => {
@@ -116,27 +94,11 @@ export const createShift = async (req, res) => {
         .status(400)
         .json({ error: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc" });
     }
-    if (timeToMinutes(Start_time_of) >= timeToMinutes(End_time_of)) {
-      return res.status(400).json({
-        error:
-          "Thời gian bắt đầu nghỉ trưa phải nhỏ hơn thời gian kết thúc nghỉ trưa",
-      });
-    }
-    if (
-      timeToMinutes(Start_time_of) < timeToMinutes(Time_in) ||
-      timeToMinutes(End_time_of) > timeToMinutes(Time_out)
-    ) {
-      return res.status(400).json({
-        error: "Thời gian nghỉ trưa phải nằm trong khoảng thời gian làm việc",
-      });
-    }
 
     const shift = await Shift.create({
       Name,
       Time_in,
       Time_out,
-      Start_time_of,
-      End_time_of,
       Is_default,
       Type_shift,
       Start_date,
@@ -163,8 +125,6 @@ export const updateShift = async (req, res) => {
       Name,
       Time_in,
       Time_out,
-      Start_time_of,
-      End_time_of,
       Is_default,
       Type_shift,
       Start_date,
@@ -180,16 +140,6 @@ export const updateShift = async (req, res) => {
     }
     if (!Time_out) {
       return res.status(400).json({ error: "Thời gian kết thúc là bắt buộc" });
-    }
-    if (!Start_time_of) {
-      return res
-        .status(400)
-        .json({ error: "Thời gian bắt đầu nghỉ trưa là bắt buộc" });
-    }
-    if (!End_time_of) {
-      return res
-        .status(400)
-        .json({ error: "Thời gian kết thúc nghỉ trưa là bắt buộc" });
     }
     if (Is_default === undefined || Is_default === null) {
       return res.status(400).json({ error: "Trường Is_default là bắt buộc" });
@@ -220,16 +170,6 @@ export const updateShift = async (req, res) => {
         .status(400)
         .json({ error: "Thời gian kết thúc phải có định dạng HH:mm" });
     }
-    if (!timeFormatRegex.test(Start_time_of)) {
-      return res
-        .status(400)
-        .json({ error: "Thời gian bắt đầu nghỉ trưa phải có định dạng HH:mm" });
-    }
-    if (!timeFormatRegex.test(End_time_of)) {
-      return res.status(400).json({
-        error: "Thời gian kết thúc nghỉ trưa phải có định dạng HH:mm",
-      });
-    }
 
     // Kiểm tra logic thời gian
     const timeToMinutes = (time) => {
@@ -242,27 +182,11 @@ export const updateShift = async (req, res) => {
         .status(400)
         .json({ error: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc" });
     }
-    if (timeToMinutes(Start_time_of) >= timeToMinutes(End_time_of)) {
-      return res.status(400).json({
-        error:
-          "Thời gian bắt đầu nghỉ trưa phải nhỏ hơn thời gian kết thúc nghỉ trưa",
-      });
-    }
-    if (
-      timeToMinutes(Start_time_of) < timeToMinutes(Time_in) ||
-      timeToMinutes(End_time_of) > timeToMinutes(Time_out)
-    ) {
-      return res.status(400).json({
-        error: "Thời gian nghỉ trưa phải nằm trong khoảng thời gian làm việc",
-      });
-    }
 
     await shift.update({
       Name,
       Time_in,
       Time_out,
-      Start_time_of,
-      End_time_of,
       Is_default,
       Type_shift,
       Start_date,
