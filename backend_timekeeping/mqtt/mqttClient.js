@@ -1,6 +1,6 @@
 import mqtt from 'mqtt';
 import dotenv from 'dotenv';
-import {saveTimekeepingFromMQTT} from "../controller/timekeepingController.js";
+import { saveTimekeepingFromMQTT } from "../controller/timekeepingController.js";
 
 dotenv.config();
 
@@ -28,7 +28,8 @@ client.on('message', async (topic, message) => {
     try {
       const payload = JSON.parse(message.toString());
       const { stt, data } = payload;
-
+      console.log("stt ", stt)
+      console.log("-----------------------------")
       if (stt === 1000) {
         const { label, timestamp } = data;
         await saveTimekeepingFromMQTT(label, timestamp); // Xử lý ghi DB

@@ -3,28 +3,29 @@ import Staff from "../models/Staff.js";
 import Shift from "../models/Shift.js";
 import StaffShift from "../models/StaffShift.js";
 import { Op } from "sequelize";
+import Timekeeping from "../models/Timekeeping.js";
 
 export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) => {
   try {
     const work_date = date;
-    
-    const staffShift  = await StaffShift.findOne({
-        where: { staffID: staff_id },
-        
-        include: [
-          {
-            model: Shift,
-            where: {
-              Start_date: {
-                [Op.lte]: date,
-              },
+
+    const staffShift = await StaffShift.findOne({
+      where: { staffID: staff_id },
+
+      include: [
+        {
+          model: Shift,
+          where: {
+            Start_date: {
+              [Op.lte]: date,
             },
           },
-        ],
-      });
-      
+        },
+      ],
+    });
+
     const shift = staffShift ? staffShift.Shift : null;
-    
+
     const shift_time_in = shift ? shift.Time_in : null;
     const shift_time_out = shift ? shift.Time_out : null;
     const shift_total_time = shift ? shift.Total_time : null;
@@ -82,20 +83,113 @@ export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) =
   }
 };
 
+// export const getWorklogsByStaffId = async (req, res) => {
+//   try {
+//     const { staffId } = req.params;
+//     const { year, month } = req.query;
+
+//     // Validate staffId
+//     if (!staffId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Staff ID is required"
+//       });
+//     }
+
+//     // Check if staff exists
+//     const staff = await Staff.findByPk(staffId);
+//     if (!staff) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Staff not found"
+//       });
+//     }
+
+//     // Build date filter
+//     let dateFilter = {};
+//     if (year && month) {
+//       // If both year and month are provided, filter by specific month
+//       const startDate = new Date(year, month - 1, 1); // month is 0-indexed in JS
+//       const endDate = new Date(year, month, 0); // Last day of the month
+
+//       dateFilter = {
+//         work_date: {
+//           [Op.between]: [startDate, endDate]
+//         }
+//       };
+//     } else if (year) {
+//       // If only year is provided, filter by entire year
+//       const startDate = new Date(year, 0, 1);
+//       const endDate = new Date(year, 11, 31);
+
+//       dateFilter = {
+//         work_date: {
+//           [Op.between]: [startDate, endDate]
+//         }
+//       };
+//     }
+
+//     // Query worklogs with filters
+//     const worklogs = await Worklog.findAll({
+//       where: {
+//         staffID: staffId,
+//         ...dateFilter
+//       },
+//       include: [
+//         {
+//           model: Shift,
+//           attributes: ['ID', 'Name', 'Time_in', 'Time_out']
+//         }
+//       ],
+//       order: [['work_date', 'DESC']]
+//     });
+
+//     // Format the response to match the database structure
+//     const formattedWorklogs = worklogs.map(log => ({
+//       id: log.ID,
+//       staffID: log.staffID,
+//       work_date: log.work_date,
+//       shiftID: log.shiftID,
+//       working_hours: log.working_hours,
+//       work_unit: log.work_unit,
+//       note: log.note,
+//       created_at: log.created_at,
+//       updated_at: log.updated_at,
+//       shift: log.Shift ? {
+//         id: log.Shift.ID,
+//         name: log.Shift.Name,
+//         time_in: log.Shift.Time_in,
+//         time_out: log.Shift.Time_out
+//       } : null
+//     }));
+
+//     return res.status(200).json({
+//       success: true,
+//       data: formattedWorklogs
+//     });
+
+//   } catch (error) {
+//     console.error("Error in getWorklogsByStaffId:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: `Server error: ${error.message}`
+//     });
+//   }
+// };
+
+
 export const getWorklogsByStaffId = async (req, res) => {
   try {
     const { staffId } = req.params;
     const { year, month } = req.query;
-    
-    // Validate staffId
+
     if (!staffId) {
       return res.status(400).json({
         success: false,
         message: "Staff ID is required"
       });
     }
-    
-    // Check if staff exists
+
     const staff = await Staff.findByPk(staffId);
     if (!staff) {
       return res.status(404).json({
@@ -103,32 +197,23 @@ export const getWorklogsByStaffId = async (req, res) => {
         message: "Staff not found"
       });
     }
-    
-    // Build date filter
+
     let dateFilter = {};
     if (year && month) {
-      // If both year and month are provided, filter by specific month
-      const startDate = new Date(year, month - 1, 1); // month is 0-indexed in JS
-      const endDate = new Date(year, month, 0); // Last day of the month
-      
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
       dateFilter = {
-        work_date: {
-          [Op.between]: [startDate, endDate]
-        }
+        work_date: { [Op.between]: [startDate, endDate] }
       };
     } else if (year) {
-      // If only year is provided, filter by entire year
       const startDate = new Date(year, 0, 1);
       const endDate = new Date(year, 11, 31);
-      
       dateFilter = {
-        work_date: {
-          [Op.between]: [startDate, endDate]
-        }
+        work_date: { [Op.between]: [startDate, endDate] }
       };
     }
-    
-    // Query worklogs with filters
+
+    // Lấy worklogs
     const worklogs = await Worklog.findAll({
       where: {
         staffID: staffId,
@@ -142,31 +227,46 @@ export const getWorklogsByStaffId = async (req, res) => {
       ],
       order: [['work_date', 'DESC']]
     });
-    
-    // Format the response to match the database structure
-    const formattedWorklogs = worklogs.map(log => ({
-      id: log.ID,
-      staffID: log.staffID,
-      work_date: log.work_date,
-      shiftID: log.shiftID,
-      working_hours: log.working_hours,
-      work_unit: log.work_unit,
-      note: log.note,
-      created_at: log.created_at,
-      updated_at: log.updated_at,
-      shift: log.Shift ? {
-        id: log.Shift.ID,
-        name: log.Shift.Name,
-        time_in: log.Shift.Time_in,
-        time_out: log.Shift.Time_out
-      } : null
-    }));
-    
+
+    // Lấy toàn bộ Timekeeping trong khoảng thời gian cần
+    const timekeepings = await Timekeeping.findAll({
+      where: {
+        StaffID: staffId
+      }
+    });
+
+    // Format response
+    const formattedWorklogs = worklogs.map(log => {
+      const timeRecord = timekeepings.find(tk =>
+        new Date(tk.Date).toISOString().slice(0, 10) === log.work_date
+      );
+
+      return {
+        id: log.ID,
+        staffID: log.staffID,
+        work_date: log.work_date,
+        shiftID: log.shiftID,
+        working_hours: log.working_hours,
+        work_unit: log.work_unit,
+        note: log.note,
+        created_at: log.created_at,
+        updated_at: log.updated_at,
+        shift: log.Shift ? {
+          id: log.Shift.ID,
+          name: log.Shift.Name,
+          time_in: log.Shift.Time_in,
+          time_out: log.Shift.Time_out
+        } : null,
+        checkin: timeRecord?.Time_in || null,
+        checkout: timeRecord?.Time_out || null
+      };
+    });
+
     return res.status(200).json({
       success: true,
       data: formattedWorklogs
     });
-    
+
   } catch (error) {
     console.error("Error in getWorklogsByStaffId:", error);
     return res.status(500).json({

@@ -139,6 +139,8 @@ const StaffShiftManagement: React.FC = () => {
             if (searchCriteria.name) params.name = searchCriteria.name;
 
             const response = await axios.get(`${API_URL}/api/staffshift`, { params });
+
+            // Xử lý dữ liệu trả về
             let staffShiftsData = [];
             let paginationData = { page, pageSize, total: 0, totalPages: 0 };
 
@@ -164,6 +166,7 @@ const StaffShiftManagement: React.FC = () => {
             }));
 
             setStaffShifts(mappedData);
+
             setPagination({
                 current: paginationData.page,
                 pageSize: paginationData.pageSize,
@@ -186,7 +189,10 @@ const StaffShiftManagement: React.FC = () => {
     const fetchStaffs = async () => {
         try {
             const response = await axios.get(`${API_URL}/api/staffs`);
+
+            // Xử lý dữ liệu trả về
             let staffsData = [];
+
             if (response.data && response.data.data && Array.isArray(response.data.data)) {
                 staffsData = response.data.data;
             } else if (Array.isArray(response.data)) {
@@ -256,6 +262,7 @@ const StaffShiftManagement: React.FC = () => {
                     `${API_URL}/api/staffshift/${editingStaffShift.ID}`,
                     payload
                 );
+
                 notificationApi.success({
                     message: "Cập nhật phân công ca làm việc",
                     description: "Phân công ca làm việc đã được cập nhật thành công.",
@@ -269,6 +276,7 @@ const StaffShiftManagement: React.FC = () => {
                     placement: "topRight",
                 });
             }
+
             setIsModalVisible(false);
             const currentSearchValues = searchForm.getFieldsValue();
             fetchStaffShifts(currentSearchValues, pagination.current, pagination.pageSize);
@@ -285,6 +293,7 @@ const StaffShiftManagement: React.FC = () => {
     const handleDelete = async (id: number) => {
         try {
             await axios.delete(`${API_URL}/api/staffshift/${id}`);
+
             notificationApi.success({
                 message: "Xóa phân công ca làm việc",
                 description: "Phân công ca làm việc đã được xóa thành công.",
@@ -431,7 +440,7 @@ const StaffShiftManagement: React.FC = () => {
     return (
         <MainLayout title="Quản lý ca làm việc của nhân viên">
             {contextHolder}
-            <Tabs defaultActiveKey="1">
+            <Tabs defaultActiveKey="1" style={{ paddingLeft: "20px", paddingRight: "20px" }}>
                 <TabPane tab="Danh sách ca làm việc" key="1">
                     <Row gutter={16} style={{ marginTop: "16px" }}>
                         <Col span={18}>
@@ -638,8 +647,8 @@ const StaffShiftManagement: React.FC = () => {
                         </Form>
                     </Modal>
                 </TabPane>
-            </Tabs>
-        </MainLayout>
+            </Tabs >
+        </MainLayout >
     );
 };
 

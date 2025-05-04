@@ -18,7 +18,7 @@ interface Worklog {
     working_hours: number;
     work_unit: number;
 }
-    
+
 
 const TimeManagement: React.FC = () => {
     const userStr = localStorage.getItem("user");
@@ -28,7 +28,7 @@ const TimeManagement: React.FC = () => {
 
     const dateCellRender = (date: any) => {
         const day = date.date();
-        const month = date.month() + 1; 
+        const month = date.month() + 1;
         const year = date.year();
 
         const FORMAT = "YYYY-MM-DD";
@@ -42,11 +42,11 @@ const TimeManagement: React.FC = () => {
         if (worklogRecord) {
             return <div className="has-clocked">{worklogRecord.work_unit}</div>;
         }
-        return <div></div>; 
+        return <div></div>;
     };
 
     const getWorklog = async (year: any, month: any) => {
-        try{
+        try {
             const response = await fetch(`${API_URL}/api/worklogs/staff/${userId}?year=${year}&month=${month}`);
             if (response.ok) {
                 const jsonData = await response.json();
@@ -109,7 +109,7 @@ const TimeManagement: React.FC = () => {
                     <Text style={{ display: "block", textAlign: "center", marginBottom: "16px" }}>
                         {monthStart} - {monthEnd}
                     </Text>
-                    <Calendar 
+                    <Calendar
                         cellRender={dateCellRender}
                         onPanelChange={onPanelChange}
                         defaultValue={currentDate} // Đảm bảo sử dụng dayjs
