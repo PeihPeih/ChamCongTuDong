@@ -18,7 +18,7 @@ def setup_mqtt(recognizer: FaceRecognitionService):
         client.subscribe("topic/recognize_auth")  # Đăng ký thêm topic recognize_auth
 
     def on_message(client, userdata, msg):
-        print(f"Message on {msg.topic}: {msg.payload.decode()}")
+        # print(f"Message on {msg.topic}: {msg.payload.decode()}")
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -27,7 +27,16 @@ def setup_mqtt(recognizer: FaceRecognitionService):
             if msg.topic == "topic/retrain_model":
                 loop.run_until_complete(recognizer.retrain_model())
             elif msg.topic == "topic/recognize_auth":
-                payload = json.loads(msg.payload.decode())
+                try:
+                    payload_str = msg.payload.decode('utf-8')
+                    payload = json.loads(payload_str)
+                except UnicodeDecodeError as e:
+                    print(f"Decode error: {e}")
+                    return
+                except json.JSONDecodeError as e:
+                    print(f"JSON decode error: {e}")
+                    return
+                # payload = json.loads(msg.payload.decode())
                 image_base64 = payload.get("image_base64")
                 timestamp = payload.get("timestamp")
                 if image_base64 and timestamp:

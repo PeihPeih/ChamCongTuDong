@@ -21,7 +21,7 @@ import Position from "../models/Position.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_DIR = path.join(__dirname, "..", "..", "data"); 
+const DATA_DIR = path.join(__dirname, "..", "..", "data");
 
 export const getAllStaff = async (req, res) => {
   try {
@@ -29,12 +29,12 @@ export const getAllStaff = async (req, res) => {
 
     const whereClause = name
       ? {
-          [Op.or]: [
-            { Fullname: { [Op.like]: `%${name}%` } },
-            { Code: { [Op.like]: `%${name}%` } },
-            { Email: { [Op.like]: `%${name}%` } },
-          ],
-        }
+        [Op.or]: [
+          { Fullname: { [Op.like]: `%${name}%` } },
+          { Code: { [Op.like]: `%${name}%` } },
+          { Email: { [Op.like]: `%${name}%` } },
+        ],
+      }
       : {};
     const limit = parseInt(pageSize, 10);
     const offset = (parseInt(page, 10) - 1) * limit;
@@ -343,7 +343,7 @@ export const addSampleImage = async (req, res) => {
     const response = await axios.post(`${FACE_API}/api/check-frontal-face`, {
       image_base64: imageBase64,
     });
-    if (response.data["stt"] != 1000){
+    if (response.data["stt"] != 1000) {
       return res.status(400).json({ error: "Vui lòng tải lên ảnh mặt chính diện" });
     }
 
@@ -429,7 +429,7 @@ export const deleteImages = async (req, res) => {
     if (!imageDoc) {
       return res.status(404).json({ message: "Không tìm thấy nhân viên với ID này" });
     }
-    const imagesToDelete = imageDoc.imagePaths.filter((imgPath) => 
+    const imagesToDelete = imageDoc.imagePaths.filter((imgPath) =>
       imageNames.some((imgName) => imgPath.includes(imgName))
     );
 
