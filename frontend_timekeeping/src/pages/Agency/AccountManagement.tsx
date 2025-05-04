@@ -74,22 +74,32 @@ const AccountManagement: React.FC = () => {
   const [positions, setPositions] = useState<Position[]>([]);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [form] = Form.useForm();
+  const [searchForm] = Form.useForm(); // Form cho tìm kiếm
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
-  const [searchValue, setSearchValue] = useState<string>("");
   const [pagination, setPagination] = useState<TablePaginationConfig>({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  });
+          current: 1,
+          pageSize: 10,
+          total: 0,
+      });
   const [notificationApi, contextHolder] = notification.useNotification();
-  const [fileList, setFileList] = useState<UploadFile[]>([]); // Thêm state để quản lý fileList
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   // Lấy danh sách nhân viên
-  const fetchStaffs = async (search?: string, page = 1, pageSize = 10) => {
+  const fetchStaffs = async (
+    searchCriteria: { code?: string; name?: string; departmentID?: number },
+    page = 1,
+    pageSize = 10
+  ) => {
     try {
       console.log("Fetching staffs from:", `${API_URL}/api/staffs`);
       const response = await axios.get(`${API_URL}/api/staffs`, {
-        params: { name: search, page, pageSize },
+        params: {
+          code: searchCriteria.code,
+          name: searchCriteria.name,
+          departmentID: searchCriteria.departmentID,
+          page,
+          pageSize,
+        },
       });
       const { data, pagination: paginationData } = response.data;
       setStaffs(
@@ -163,23 +173,21 @@ const AccountManagement: React.FC = () => {
   const uploadProps: UploadProps = {
     name: "file",
     accept: ".xlsx",
-    showUploadList: false, // Tắt hiển thị danh sách file
+    showUploadList: false,
     beforeUpload: (file: UploadFile) => {
-      return false; // Ngăn upload tự động để xử lý thủ công
+      return false; // Ngăn upload tự động
     },
     onChange: async (info: { file: UploadFile }) => {
       const { file } = info;
-      // Cập nhật fileList để hiển thị tên file tạm thời
       setFileList([file]);
 
-      // Kiểm tra kiểu file
       if (file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
         message.error("Vui lòng chọn file Excel (.xlsx)");
         return;
       }
 
       const formData = new FormData();
-      formData.append("file", file as any); // Ép kiểu để tránh lỗi TypeScript
+      formData.append("file", file as any);
 
       try {
         const response = await axios.post(`${API_URL}/api/staffs/import`, formData, {
@@ -192,8 +200,8 @@ const AccountManagement: React.FC = () => {
             placement: "topRight",
           });
         }
-        fetchStaffs(searchValue, pagination.current, pagination.pageSize);
-        setFileList([]); // Reset fileList sau khi import thành công
+        fetchStaffs({}, pagination.current, pagination.pageSize);
+        setFileList([]);
       } catch (error: any) {
         notificationApi.error({
           message: "Lỗi khi import nhân viên",
@@ -206,25 +214,26 @@ const AccountManagement: React.FC = () => {
           ),
           placement: "topRight",
         });
-        setFileList([]); // Reset fileList sau khi import thành công
+        setFileList([]);
       }
     },
   };
 
   useEffect(() => {
-    fetchStaffs();
+    fetchStaffs({});
     fetchRoles();
     fetchDepartments();
     fetchPositions();
   }, []);
 
-  const handleSearch = (value: string) => {
-    setSearchValue(value);
-    fetchStaffs(value, pagination.current, pagination.pageSize);
+  const handleSearch = (values: { code?: string; name?: string; departmentID?: number }) => {
+    fetchStaffs(values, 1, pagination.pageSize); // Reset về trang 1 khi tìm kiếm
+    searchForm.setFieldsValue(values); // Giữ giá trị form
   };
 
   const handleTableChange = (newPagination: TablePaginationConfig) => {
-    fetchStaffs(searchValue, newPagination.current, newPagination.pageSize);
+    const currentSearchValues = searchForm.getFieldsValue();
+    fetchStaffs(currentSearchValues, newPagination.current, newPagination.pageSize);
   };
 
   const showAddModal = () => {
@@ -298,7 +307,8 @@ const AccountManagement: React.FC = () => {
         });
       }
       setIsModalVisible(false);
-      fetchStaffs(searchValue, pagination.current, pagination.pageSize);
+      const currentSearchValues = searchForm.getFieldsValue();
+      fetchStaffs(currentSearchValues, pagination.current, pagination.pageSize);
     } catch (error: any) {
       console.error("Error saving staff:", error);
       notificationApi.error({
@@ -319,7 +329,8 @@ const AccountManagement: React.FC = () => {
         description: `Nhân viên "${deletedStaff?.Fullname}" đã được xóa thành công.`,
         placement: "topRight",
       });
-      fetchStaffs(searchValue, pagination.current, pagination.pageSize);
+      const currentSearchValues = searchForm.getFieldsValue();
+      fetchStaffs(currentSearchValues, pagination.current, pagination.pageSize);
     } catch (error: any) {
       console.error("Error deleting staff:", error);
       notificationApi.error({
@@ -394,17 +405,47 @@ const AccountManagement: React.FC = () => {
     <MainLayout title="Quản lý tài khoản">
       {contextHolder}
       <Row gutter={16} style={{ marginTop: "16px" }}>
-        <Col span={6}></Col>
-        <Col span={12}>
-          <Input
-            placeholder="Tìm kiếm theo tên, mã nhân viên, email"
-            value={searchValue}
-            onChange={(e) => handleSearch(e.target.value)}
-            prefix={<SearchOutlined />}
-            style={{ width: "100%" }}
-          />
+        <Col span={18}>
+          <Form
+            form={searchForm}
+            layout="inline"
+            onFinish={handleSearch}
+          >
+            <Form.Item name="code" style={{ marginBottom: 16 }}>
+              <Input
+                placeholder="Mã nhân viên"
+                prefix={<SearchOutlined />}
+                style={{ width: 200 }}
+              />
+            </Form.Item>
+            <Form.Item name="name" style={{ marginBottom: 16 }}>
+              <Input
+                placeholder="Họ và tên"
+                prefix={<SearchOutlined />}
+                style={{ width: 200 }}
+              />
+            </Form.Item>
+            <Form.Item name="departmentID" style={{ marginBottom: 16 }}>
+              <Select
+                placeholder="Chọn phòng ban"
+                allowClear
+                style={{ width: 200 }}
+              >
+                {departments.map((department) => (
+                  <Option key={department.id} value={department.id}>
+                    {department.Name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item style={{ marginBottom: 16 }}>
+              <Button type="primary" htmlType="submit">
+                Tìm kiếm
+              </Button>
+            </Form.Item>
+          </Form>
         </Col>
-        <Col span={4}>
+        <Col span={6} style={{ textAlign: "right" }}>
           <Space>
             <Button type="primary" icon={<PlusOutlined />} onClick={showAddModal}>
               Thêm mới

@@ -18,6 +18,8 @@ import {
     Tag,
     notification,
     TablePaginationConfig,
+    DatePicker,
+    InputNumber,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -25,17 +27,20 @@ import MainLayout from "../../layouts/MainLayout";
 import { ColumnType } from "antd/es/table";
 import { API_URL } from "../../config/index";
 import { TimePicker, Select } from "antd";
+import moment from "moment";
 
-// Định nghĩa kiểu cho Role
+// Định nghĩa kiểu cho Shift
 interface Shift {
     ID: number;
     Name: string;
     Time_in: string;
     Time_out: string;
+    Start_time_of: string;
+    End_time_of: string;
     Is_default: number;
     Type_shift: number;
     Start_date: string;
-    Total_time: string;
+    Total_time: number;
     stt?: number;
     key?: number;
 }
@@ -47,8 +52,8 @@ const Shift: React.FC = () => {
     const [shifts, setShifts] = useState<Shift[]>([]);
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
     const [form] = Form.useForm();
+    const [searchForm] = Form.useForm();
     const [editingShift, setEditingShift] = useState<Shift | null>(null);
-    const [searchValue, setSearchValue] = useState<string>("");
     const [pagination, setPagination] = useState<TablePaginationConfig>({
         current: 1,
         pageSize: 10,
@@ -56,17 +61,26 @@ const Shift: React.FC = () => {
     });
     const [notificationApi, contextHolder] = notification.useNotification();
 
-    const   fetchShifts = async (search?: string, page = 1, pageSize = 10) => {
+    const fetchShifts = async (
+        searchCriteria: { name?: string; type_shift?: number },
+        page = 1,
+        pageSize = 10
+    ) => {
         try {
             const response = await axios.get(`${API_URL}/api/shifts`, {
-                params: { name: search, page, pageSize },
+                params: {
+                    name: searchCriteria.name,
+                    type_shift: searchCriteria.type_shift,
+                    page,
+                    pageSize,
+                },
             });
             const { data, pagination: paginationData } = response.data;
             setShifts(
-                data.map((Shift: Shift, index: number) => ({
-                    ...Shift,
+                data.map((shift: Shift, index: number) => ({
+                    ...shift,
                     stt: (page - 1) * pageSize + index + 1,
-                    key: Shift.ID,
+                    key: shift.ID,
                 }))
             );
             setPagination({
@@ -85,16 +99,17 @@ const Shift: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchShifts();
+        fetchShifts({});
     }, []);
 
-    const handleSearch = (value: string) => {
-        setSearchValue(value);
-        fetchShifts(value, pagination.current, pagination.pageSize);
+    const handleSearch = (values: { name?: string; type_shift?: number }) => {
+        fetchShifts(values, 1, pagination.pageSize);
+        searchForm.setFieldsValue(values);
     };
 
     const handleTableChange = (newPagination: TablePaginationConfig) => {
-        fetchShifts(searchValue, newPagination.current, newPagination.pageSize);
+        const currentSearchValues = searchForm.getFieldsValue();
+        fetchShifts(currentSearchValues, newPagination.current, newPagination.pageSize);
     };
 
     const showAddModal = () => {
@@ -103,10 +118,18 @@ const Shift: React.FC = () => {
         setIsModalVisible(true);
     };
 
-    const showEditModal = (Shift: Shift) => {
-        setEditingShift(Shift);
+    const showEditModal = (shift: Shift) => {
+        setEditingShift(shift);
         form.setFieldsValue({
-            Name: Shift.Name,
+            Name: shift.Name,
+            Time_in: shift.Time_in ? moment(shift.Time_in, "HH:mm") : null,
+            Time_out: shift.Time_out ? moment(shift.Time_out, "HH:mm") : null,
+            Start_time_of: shift.Start_time_of ? moment(shift.Start_time_of, "HH:mm") : null,
+            End_time_of: shift.End_time_of ? moment(shift.End_time_of, "HH:mm") : null,
+            Type_shift: shift.Type_shift,
+            Start_date: shift.Start_date ? moment(shift.Start_date) : null,
+            Total_time: shift.Total_time,
+            Is_default: shift.Is_default === 1,
         });
         setIsModalVisible(true);
     };
@@ -115,7 +138,14 @@ const Shift: React.FC = () => {
         try {
             const values = await form.validateFields();
             const payload = {
-                Name: values.Name as string,
+                Name: values.Name,
+                Time_in: values.Time_in ? values.Time_in.format("HH:mm") : null,
+                Time_out: values.Time_out ? values.Time_out.format("HH:mm") : null,
+                Start_time_of: values.Start_time_of ? values.Start_time_of.format("HH:mm") : null,
+                End_time_of: values.End_time_of ? values.End_time_of.format("HH:mm") : null,
+                Type_shift: values.Type_shift ? values.Type_shift.toString() : null, // Chuyển thành chuỗi
+                Start_date: values.Start_date ? values.Start_date.format("YYYY-MM-DD HH:mm:ss") : null,
+                Total_time: values.Total_time,
                 Is_default: values.Is_default ? 1 : 0,
             };
 
@@ -125,13 +155,13 @@ const Shift: React.FC = () => {
                     payload
                 );
                 setShifts(
-                    shifts.map((Shift) =>
-                        Shift.ID === editingShift.ID ? { ...Shift, ...response.data } : Shift
+                    shifts.map((shift) =>
+                        shift.ID === editingShift.ID ? { ...shift, ...response.data } : shift
                     )
                 );
                 notificationApi.success({
                     message: "Cập nhật ca làm",
-                    description: `ca làm "${payload.Name}" đã được cập nhật thành công.`,
+                    description: `Ca làm "${payload.Name}" đã được cập nhật thành công.`,
                     placement: "topRight",
                 });
             } else {
@@ -139,14 +169,15 @@ const Shift: React.FC = () => {
                 setShifts([...shifts, { ...response.data, stt: shifts.length + 1, key: response.data.ID }]);
                 notificationApi.success({
                     message: "Thêm ca làm",
-                    description: `ca làm "${payload.Name}" đã được thêm thành công.`,
+                    description: `Ca làm "${payload.Name}" đã được thêm thành công.`,
                     placement: "topRight",
                 });
             }
             setIsModalVisible(false);
-            fetchShifts(searchValue, pagination.current, pagination.pageSize);
+            const currentSearchValues = searchForm.getFieldsValue();
+            fetchShifts(currentSearchValues, pagination.current, pagination.pageSize);
         } catch (error: any) {
-            console.error("Error saving role:", error);
+            console.error("Error saving shift:", error);
             notificationApi.error({
                 message: "Lỗi khi lưu ca làm",
                 description: error.response?.data?.error || "Không thể lưu ca làm.",
@@ -158,16 +189,17 @@ const Shift: React.FC = () => {
     const handleDelete = async (id: number) => {
         try {
             await axios.delete(`${API_URL}/api/shifts/${id}`);
-            const deletedShift = shifts.find((Shift) => Shift.ID === id);
-            setShifts(shifts.filter((Shift) => Shift.ID !== id));
+            const deletedShift = shifts.find((shift) => shift.ID === id);
+            setShifts(shifts.filter((shift) => shift.ID !== id));
             notificationApi.success({
                 message: "Xóa ca làm",
-                description: `ca làm "${deletedShift?.Name}" đã được xóa thành công.`,
+                description: `Ca làm "${deletedShift?.Name}" đã được xóa thành công.`,
                 placement: "topRight",
             });
-            fetchShifts(searchValue, pagination.current, pagination.pageSize);
+            const currentSearchValues = searchForm.getFieldsValue();
+            fetchShifts(currentSearchValues, pagination.current, pagination.pageSize);
         } catch (error: any) {
-            console.error("Error deleting role:", error);
+            console.error("Error deleting shift:", error);
             notificationApi.error({
                 message: "Lỗi khi xóa ca làm",
                 description: error.response?.data?.error || "Không thể xóa ca làm.",
@@ -182,7 +214,6 @@ const Shift: React.FC = () => {
         form.resetFields();
     };
 
-    // Khai báo kiểu rõ ràng cho columns
     const columns: ColumnType<Shift>[] = [
         {
             title: "STT",
@@ -205,16 +236,32 @@ const Shift: React.FC = () => {
             key: "Time_out",
         },
         {
+            title: "Thời gian bắt đầu nghỉ trưa",
+            dataIndex: "Start_time_of",
+            key: "Start_time_of",
+        },
+        {
+            title: "Thời gian kết thúc nghỉ trưa",
+            dataIndex: "End_time_of",
+            key: "End_time_of",
+        },
+        {
             title: "Loại ca",
             dataIndex: "Type_shift",
             key: "Type_shift",
             render: (type: number) => {
                 const typeMap: { [key: number]: string } = {
-                    1: "Ca ngày",
-                    2: "Ca đêm",
+                    1: "Ca sáng",
+                    2: "Ca tối",
                 };
-                return typeMap[type] || "Không xác định";
+                const color = type === 1 ? "blue" : "purple";
+                return <Tag color={color}>{typeMap[type] || "Không xác định"}</Tag>;
             },
+            filters: [
+                { text: "Ca sáng", value: "1" },
+                { text: "Ca tối", value: "2" },
+            ],
+            onFilter: (value: any, record: Shift) => String(record.Type_shift) === value,
         },
         {
             title: "Mặc định",
@@ -229,6 +276,11 @@ const Shift: React.FC = () => {
                 { text: "Không", value: 0 },
             ],
             onFilter: (value: any, record: Shift) => record.Is_default === value,
+        },
+        {
+            title: "Ngày bắt đầu",
+            dataIndex: "Start_date",
+            key: "Start_date",
         },
         {
             title: "Tổng thời gian",
@@ -251,17 +303,37 @@ const Shift: React.FC = () => {
         <MainLayout title="Quản lý ca làm">
             {contextHolder}
             <Row gutter={16} style={{ marginTop: "16px" }}>
-                <Col span={6}></Col>
-                <Col span={12}>
-                    <Input
-                        placeholder="Tìm kiếm theo tên"
-                        value={searchValue}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        prefix={<SearchOutlined />}
-                        style={{ width: "100%" }}
-                    />
+                <Col span={18}>
+                    <Form
+                        form={searchForm}
+                        layout="inline"
+                        onFinish={handleSearch}
+                    >
+                        <Form.Item name="name" style={{ marginBottom: 16 }}>
+                            <Input
+                                placeholder="Tên ca"
+                                prefix={<SearchOutlined />}
+                                style={{ width: 200 }}
+                            />
+                        </Form.Item>
+                        <Form.Item name="type_shift" style={{ marginBottom: 16 }}>
+                            <Select
+                                placeholder="Chọn loại ca"
+                                allowClear
+                                style={{ width: 200 }}
+                            >
+                                <Option value={1}>Ca sáng</Option>
+                                <Option value={2}>Ca tối</Option>
+                            </Select>
+                        </Form.Item>
+                        <Form.Item style={{ marginBottom: 16 }}>
+                            <Button type="primary" htmlType="submit">
+                                Tìm kiếm
+                            </Button>
+                        </Form.Item>
+                    </Form>
                 </Col>
-                <Col span={4}>
+                <Col span={6} style={{ textAlign: "right" }}>
                     <Button type="primary" icon={<PlusOutlined />} onClick={showAddModal}>
                         Thêm mới
                     </Button>
@@ -279,9 +351,8 @@ const Shift: React.FC = () => {
                         showSizeChanger: true,
                         onChange: (page, pageSize) =>
                             handleTableChange({ current: page, pageSize }),
-                        // showTotal: (total, range) => `${range[0]}-${range[1]} / ${total} trang`, // Tùy chọn nếu bạn muốn
                         locale: {
-                            items_per_page: "/ trang", // Tùy chỉnh văn bản "per page" thành "trang"
+                            items_per_page: "/ trang",
                         },
                     }}
                 />
@@ -322,23 +393,64 @@ const Shift: React.FC = () => {
                                 <TimePicker format="HH:mm" style={{ width: "100%" }} />
                             </Form.Item>
                         </Col>
-                        <Col span={24}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="Start_time_of"
+                                label="Thời gian bắt đầu nghỉ trưa"
+                                rules={[{ required: true, message: "Vui lòng chọn thời gian bắt đầu nghỉ trưa" }]}
+                            >
+                                <TimePicker format="HH:mm" style={{ width: "100%" }} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="End_time_of"
+                                label="Thời gian kết thúc nghỉ trưa"
+                                rules={[{ required: true, message: "Vui lòng chọn thời gian kết thúc nghỉ trưa" }]}
+                            >
+                                <TimePicker format="HH:mm" style={{ width: "100%" }} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="Start_date"
+                                label="Ngày bắt đầu"
+                                rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu" }]}
+                            >
+                                <DatePicker
+                                    format="YYYY-MM-DD HH:mm:ss"
+                                    showTime
+                                    style={{ width: "100%" }}
+                                />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="Total_time"
+                                label="Tổng thời gian (giờ)"
+                                rules={[{ required: true, message: "Vui lòng nhập tổng thời gian" }]}
+                            >
+                                <InputNumber style={{ width: "100%" }} />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
                             <Form.Item
                                 name="Type_shift"
                                 label="Loại ca"
                                 rules={[{ required: true, message: "Vui lòng chọn loại ca" }]}
                             >
                                 <Select placeholder="Chọn loại ca">
-                                    <Select.Option value={1}>Ca ngày</Select.Option>
-                                    <Select.Option value={2}>Ca đêm</Select.Option>
+                                    <Option value={1}>Ca sáng</Option>
+                                    <Option value={2}>Ca tối</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
-                        <Col span={24}>
+                        <Col span={12}>
                             <Form.Item
                                 name="Is_default"
                                 label="Mặc định"
                                 valuePropName="checked"
+                                rules={[{ required: false }]}
                             >
                                 <Switch />
                             </Form.Item>
