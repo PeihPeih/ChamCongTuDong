@@ -24,7 +24,7 @@ export const getAllStaffShifts = async (req, res) => {
       limit: pageSize,
       distinct: true,
     });
-    console.log(rows);
+
     res.status(200).json({
       data: rows,
       pagination: {

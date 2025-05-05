@@ -7,9 +7,8 @@ const Timekeeping = sequelize.define(
   "Timekeeping",
   {
     ID: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    Date: { type: DataTypes.DATE, allowNull: false },
-    Time_in: { type: DataTypes.STRING(255), allowNull: true },
-    Time_out: { type: DataTypes.STRING(255), allowNull: true },
+    Time_in: { type: DataTypes.DATE, allowNull: true },
+    Time_out: { type: DataTypes.DATE, allowNull: true },
   },
   { timestamps: false }
 );
