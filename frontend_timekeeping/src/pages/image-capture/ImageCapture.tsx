@@ -107,10 +107,10 @@ const ImageCapture: React.FC = () => {
       setSelectedImages((prev) => prev.filter((name) => name !== imageName));
     }
   };
-  
+
   const handleDeleteImages = async () => {
     if (!staff || selectedImages.length === 0) return;
-  
+
     try {
       const response = await fetch(`${API_URL}/api/staffs/${staff.ID}/deleteImages`, {
         method: "DELETE",
@@ -119,7 +119,7 @@ const ImageCapture: React.FC = () => {
         },
         body: JSON.stringify({ imageNames: selectedImages }),
       });
-  
+
       const data = await response.json();
       if (response.ok) {
         notificationApi.success({
@@ -143,7 +143,7 @@ const ImageCapture: React.FC = () => {
   };
 
   useEffect(() => {
-    getAllStaffs();    
+    getAllStaffs();
   }, []);
 
   useEffect(() => {
@@ -188,7 +188,7 @@ const ImageCapture: React.FC = () => {
                 <p>Mã nhân viên: {staff.Code}</p>
                 <p>Họ và tên: {staff.Fullname}</p>
                 <p>Ngày sinh: {staff.DayOfBirth}</p>
-                <p>Giới tính: {staff.Gender}</p>
+                {/* <p>Giới tính: {staff.Gender}</p> */}
               </div>
             )}
           </Flex>
@@ -197,58 +197,58 @@ const ImageCapture: React.FC = () => {
               <h2 style={{ color: "#208f39", marginLeft: "8px" }}>Ảnh mẫu</h2>
               <div>
                 <Button
-                    style={{ marginRight: "16px" }}
-                    type="primary"
-                    icon={<UploadOutlined />}
-                    onClick={handleUploadClick}
+                  style={{ marginRight: "16px" }}
+                  type="primary"
+                  icon={<UploadOutlined />}
+                  onClick={handleUploadClick}
                 >
-                    Tải ảnh lên
+                  Tải ảnh lên
                 </Button>
                 <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    style={{ display: "none" }}
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  style={{ display: "none" }}
                 />
                 <Button
-                    style={{ marginRight: "8px" }}
-                    danger
-                    onClick={handleDeleteImages}
-                    icon={<DeleteOutlined />}
-                    disabled={selectedImages.length === 0} // Disable if no images are selected
-                    >
-                    Xóa ảnh
-                    </Button>
+                  style={{ marginRight: "8px" }}
+                  danger
+                  onClick={handleDeleteImages}
+                  icon={<DeleteOutlined />}
+                  disabled={selectedImages.length === 0} // Disable if no images are selected
+                >
+                  Xóa ảnh
+                </Button>
               </div>
             </Flex>
             <Row gutter={[16, 16]} style={{ width: "100%" }}>
-            {images &&
+              {images &&
                 images.map((src, index) => (
-                    <Col key={index} xs={24} sm={12} md={6} style={{ position: "relative" }}>
+                  <Col key={index} xs={24} sm={12} md={6} style={{ position: "relative" }}>
                     <img
-                        src={`${API_URL}/api/images/${src}`}
-                        alt={`Ảnh ${index + 1}`}
-                        style={{
+                      src={`${API_URL}/api/images/${src}`}
+                      alt={`Ảnh ${index + 1}`}
+                      style={{
                         width: "180px",
                         height: "180px",
                         objectFit: "cover",
                         cursor: "pointer",
-                        }}
+                      }}
                     />
                     <input
-                        type="checkbox"
-                        style={{
-                            position: "absolute",
-                            top: "2px",
-                            left: "8px",
-                            width: "20px",
-                            height: "20px",
-                            cursor: "pointer",
-                        }}
-                        onChange={(e) => handleSelectImage(e, src)}
+                      type="checkbox"
+                      style={{
+                        position: "absolute",
+                        top: "2px",
+                        left: "8px",
+                        width: "20px",
+                        height: "20px",
+                        cursor: "pointer",
+                      }}
+                      onChange={(e) => handleSelectImage(e, src)}
                     />
-                    </Col>
+                  </Col>
                 ))}
             </Row>
           </div>

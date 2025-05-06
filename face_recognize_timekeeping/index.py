@@ -68,7 +68,6 @@ async def process_face_recognition(image_base64: str, timestamp: str):
                 "label": result["label"],
                 "timestamp": timestamp,
             }
-
         payload = json.dumps({"stt": stt, "data": data})
         mqtt_client.publish("topic/face-recognize/result", payload)
     except Exception as e:

@@ -139,18 +139,18 @@ export const createStaffShift = async (req, res) => {
   try {
     const { StaffID, ShiftID } = req.body;
 
-    // Kiểm tra xem nhân viên đã được phân công ca này chưa
-    const existingAssignment = await StaffShift.findOne({
+    // Kiểm tra xem nhân viên đã được phân công bất kỳ ca làm việc nào chưa
+    const existingShiftForStaff = await StaffShift.findOne({
       where: {
         StaffID,
-        ShiftID,
       },
     });
 
-    if (existingAssignment) {
+    if (existingShiftForStaff) {
       return res.status(400).json({
         success: false,
-        error: "Nhân viên đã được phân công ca làm việc này",
+        error:
+          "Nhân viên đã được phân công một ca làm việc. Mỗi nhân viên chỉ được gán một ca duy nhất.",
       });
     }
 
@@ -187,7 +187,7 @@ export const createStaffShift = async (req, res) => {
       data: staffShiftWithDetails,
     });
   } catch (error) {
-    console.error("Error in createStaffShift:", error);
+    console.error("Lỗi khi tạo phân công ca làm việc:", error);
     res.status(500).json({
       success: false,
       error: "Lỗi khi tạo phân công ca làm việc",

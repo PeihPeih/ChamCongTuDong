@@ -42,7 +42,7 @@ const AppRoutes = () => {
           <Route index element={<Departments />} />
           <Route path="departments" element={<Departments />} />
           <Route path="positions" element={<Positions />} />
-          <Route path="shifts" element={<Shifts />} />
+          <Route path="shifts" element={<StaffShiftManagement />} />
           <Route path="staffs" element={<AccountManagement />} />
           <Route path="roles" element={<RoleManagement />} />
         </Route>
