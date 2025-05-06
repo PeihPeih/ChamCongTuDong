@@ -5,7 +5,7 @@ import StaffShift from "../models/StaffShift.js";
 import { Op } from "sequelize";
 import moment from "moment";
 
-export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) => {
+export const insertOrUpdateWorklog = async (staff_id, shift, date, time_in, time_out) => {
   try {    
     // Validate and format date
     if (!date) {
@@ -16,17 +16,6 @@ export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) =
     if (isNaN(formattedDate.getTime())) {
       throw new Error('Invalid date format');
     }
-
-    const staffShift = await StaffShift.findOne({
-      where: { staffID: staff_id },
-      include: [
-        {
-          model: Shift,
-        },
-      ],
-    });
-      
-    const shift = staffShift ? staffShift.Shift : null;
     
     const shift_time_in = shift ? shift.Time_in : null;
     const shift_time_out = shift ? shift.Time_out : null;

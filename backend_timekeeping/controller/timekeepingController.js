@@ -3,6 +3,8 @@ import moment from "moment";
 import { Op } from "sequelize";
 import { insertOrUpdateWorklog } from "./worklogController.js";
 import Staff from "../models/Staff.js";
+import StaffShift from "../models/StaffShift.js";
+import Shift from "../models/Shift.js";
 
 export const getAllTimekeeping = async (req, res) => {
   try {
@@ -155,15 +157,69 @@ export const saveTimekeepingFromMQTT = async (label, timestamp) => {
       where: { code: label.trim() }
     });
 
-    // Kiểm tra đã có bản ghi hôm nay chưa
-    const existing = await Timekeeping.findOne({
-      where: {
-        StaffID: staff.ID,
-        Time_in: {
-          [Op.lte]: moment(timestamp, "YYYY/MM/DD HH:mm:ss").startOf('day').add(7, 'hours').toDate(),
+    const staffShift = await StaffShift.findOne({
+      where: { staffID: staff.ID },
+      include: [
+        {
+          model: Shift,
         },
-      },
+      ],
     });
+      
+    const shift = staffShift ? staffShift.Shift : null;
+    if (!shift) {
+      console.log(`Không tìm thấy ca làm việc cho nhân viên ${staff.Fullname}`);
+      return;
+    }
+
+    let existing = false;
+    if (shift.Type_shift === 1) {
+      // Day shift: Check for entries on the same day
+      existing = await Timekeeping.findOne({
+        where: {
+          StaffID: staff.ID,
+          Time_in: {
+            [Op.between]: [
+              moment(timestamp, "YYYY/MM/DD HH:mm:ss").startOf('day').add(7, 'hours').toDate(),
+              moment(timestamp, "YYYY/MM/DD HH:mm:ss").endOf('day').add(7, 'hours').toDate(),
+            ],
+          },
+        },
+      });
+    } else if (shift.Type_shift === 2) {
+      // Night shift: Check for entries between [Shift.Time_in - 3 hours of previous day] and [0h -> shift.Time_out of same day]
+      const currentDate = moment(timestamp, "YYYY/MM/DD HH:mm:ss");
+      const shiftTimeIn = moment(shift.Time_in, "HH:mm:ss");
+      const shiftTimeOut = moment(shift.Time_out, "HH:mm:ss");
+      
+      // Calculate the start time (Shift.Time_in - 3 hours of previous day)
+      const startTime = moment(currentDate).subtract(1, 'day')
+        .set({
+          hour: shiftTimeIn.hours() - 3,
+          minute: shiftTimeIn.minutes(),
+          second: 0
+        });
+      
+      // Calculate the end time (0h -> shift.Time_out of same day)
+      const endTime = moment(currentDate)
+        .set({
+          hour: shiftTimeOut.hours(),
+          minute: shiftTimeOut.minutes(),
+          second: 0
+        });
+
+      existing = await Timekeeping.findOne({
+        where: {
+          StaffID: staff.ID,
+          Time_in: {
+            [Op.between]: [
+              startTime.add(7, 'hours').toDate(),
+              endTime.add(7, 'hours').toDate(),
+            ],
+          },
+        },
+      });
+    }
 
     if (!existing) {
       const newEntry = await Timekeeping.create({
@@ -178,6 +234,7 @@ export const saveTimekeepingFromMQTT = async (label, timestamp) => {
       await existing.save();
       await insertOrUpdateWorklog(
         existing.StaffID,
+        shift,
         work_date,
         existing.Time_in,
         existing.Time_out
