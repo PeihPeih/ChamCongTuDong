@@ -43,7 +43,6 @@ export const createShift = async (req, res) => {
       Total_time,
     } = req.body;
     // Validation
-    console.log(req.body);
     if (!Name) {
       return res.status(400).json({ error: "Tên ca làm việc là bắt buộc" });
     }
@@ -89,7 +88,7 @@ export const createShift = async (req, res) => {
       return hours * 60 + minutes;
     };
 
-    if (timeToMinutes(Time_in) >= timeToMinutes(Time_out)) {
+    if (timeToMinutes(Time_in) >= timeToMinutes(Time_out) && Type_shift === "1") {
       return res
         .status(400)
         .json({ error: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc" });
@@ -115,7 +114,6 @@ export const createShift = async (req, res) => {
 // Cập nhật ca làm việc
 export const updateShift = async (req, res) => {
   try {
-    console.log(req.body);
     const shift = await Shift.findByPk(req.params.id);
     if (!shift) {
       return res.status(404).json({ error: "Không tìm thấy ca làm việc" });
@@ -144,7 +142,7 @@ export const updateShift = async (req, res) => {
     if (Is_default === undefined || Is_default === null) {
       return res.status(400).json({ error: "Trường Is_default là bắt buộc" });
     }
-    if (!Type_shift || !["1", "2"].includes(Type_shift)) {
+    if (!Type_shift || !["1", "2"].includes(Tyxe_shift)) {
       return res
         .status(400)
         .json({ error: "Loại ca phải là '1' (Ca sáng) hoặc '2' (Ca tối)" });
@@ -177,7 +175,7 @@ export const updateShift = async (req, res) => {
       return hours * 60 + minutes;
     };
 
-    if (timeToMinutes(Time_in) >= timeToMinutes(Time_out)) {
+    if (timeToMinutes(Time_in) >= timeToMinutes(Time_out) && Type_shift === "1") {
       return res
         .status(400)
         .json({ error: "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc" });

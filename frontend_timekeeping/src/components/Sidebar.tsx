@@ -89,11 +89,6 @@ const Sidebar: React.FC = () => {
           key: "2-5",
           label: <Link to="/roles">Quyền</Link>,
           path: "/roles",
-        },
-        {
-          key:"2-6",
-          label:<Link to="/staffshift-management">Quản lí ca người dùng</Link>,
-          path:"/staffshift-management"
         }
       ],
     },
@@ -102,12 +97,6 @@ const Sidebar: React.FC = () => {
       icon: <CameraOutlined />,
       label: <Link to="/staff/image-capture">Lấy mẫu khuôn mặt</Link>,
       path: "/staff/image-capture",
-    },
-    {
-      key: "5",
-      icon: <CalendarOutlined />,
-      label: <Link to="/shift-management">Quản lý ca làm việc</Link>,
-      path: "/shift-management",
     },
     {
       key: "6",

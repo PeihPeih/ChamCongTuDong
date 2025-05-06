@@ -32,13 +32,27 @@ export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) =
     let valid_work_hours = 0;
 
     if (shift_time_in && shift_time_out) {
-      const actual_time_in = time_in > shift_time_in ? time_in : shift_time_in;
-      const actual_time_out = time_out < shift_time_out ? time_out : shift_time_out;
+      let time_in_tmp = moment(time_in).format("HH:mm:ss");
+      let time_out_tmp = moment(time_out).format("HH:mm:ss");
 
+      let actual_time_in = time_in_tmp > shift_time_in ? time_in_tmp : shift_time_in;
+      let actual_time_out = time_out_tmp < shift_time_out ? time_out_tmp : shift_time_out;
 
-      if (actual_time_out > actual_time_in) {
+      // Night shift
+      if (shift.Type_shift === 2) {
+        if (actual_time_in <= actual_time_out) {
+          const diffInMilliseconds = new Date(`1970-01-01T${actual_time_out}Z`) - new Date(`1970-01-01T${actual_time_in}Z`);
+          valid_work_hours = diffInMilliseconds / (1000 * 60 * 60);
+        } else {
+          const diffInMilliseconds = new Date(`1970-01-02T${actual_time_out}Z`) - new Date(`1970-01-01T${actual_time_in}Z`);
+          valid_work_hours = diffInMilliseconds / (1000 * 60 * 60);
+        }
+      }
+
+      // Day shift
+      else {
         const diffInMilliseconds = new Date(`1970-01-01T${actual_time_out}Z`) - new Date(`1970-01-01T${actual_time_in}Z`);
-        valid_work_hours = diffInMilliseconds / (1000 * 60 * 60); // Convert milliseconds to hours
+        valid_work_hours = diffInMilliseconds / (1000 * 60 * 60);
       }
     }
 
@@ -46,7 +60,7 @@ export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) =
     const existingWorklog = await Worklog.findOne({
       where: {
         staffID: staff_id,
-        work_date: work_date,
+        work_date: formattedDate,
       },
     });
 
@@ -54,8 +68,6 @@ export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) =
       // Update the existing worklog
       await Worklog.update(
         {
-          time_in: time_in,
-          time_out: time_out,
           working_hours: valid_work_hours,
           work_unit: work_unit,
         },
@@ -69,9 +81,7 @@ export const insertOrUpdateWorklog = async (staff_id, date, time_in, time_out) =
       // Insert a new worklog
       await Worklog.create({
         staffID: staff_id,
-        work_date: work_date,
-        time_in: time_in,
-        time_out: time_out,
+        work_date: formattedDate,
         working_hours: valid_work_hours,
         work_unit: work_unit,
         shiftID: shift.ID

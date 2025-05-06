@@ -17,8 +17,6 @@ import RegisterPage from "../pages/register/RegisterPage";
 import ProtectedRoute from "./protectedRoute";
 import ChangePassword from "../pages/change-password/ChangePassword";
 import ImageCapture from "../pages/image-capture/ImageCapture";
-import ShiftManagement from "../pages/shift/ShiftManagement";
-import StaffShiftManagement from "../pages/shift/StaffShiftManagement";
 
 const AppRoutes = () => {
   return (
@@ -39,7 +37,6 @@ const AppRoutes = () => {
           <Route path="/dayoff-types" element={<DayoffTypes />} />
         </Route>
         <Route path="/reports" element={<Reports />} />
-        <Route path="/shift-management" element={<ShiftManagement />} />
         {/* Nested routes */}
         <Route>
           <Route index element={<Departments />} />
@@ -48,10 +45,6 @@ const AppRoutes = () => {
           <Route path="shifts" element={<StaffShiftManagement />} />
           <Route path="staffs" element={<AccountManagement />} />
           <Route path="roles" element={<RoleManagement />} />
-          <Route
-            path="staffshift-management"
-            element={<StaffShiftManagement />}
-          />
         </Route>
         <Route path="/staff/image-capture" element={<ImageCapture />} />
       </Route>

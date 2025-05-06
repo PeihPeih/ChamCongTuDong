@@ -26,8 +26,7 @@ import React from "react";
 import MainLayout from "../../layouts/MainLayout";
 import { useEffect, useState } from "react";
 import { API_URL } from "../../config/index";
-import { formatDate } from "../../utils/DateUtils";
-import { render } from "@testing-library/react";
+import { formatDate, formatDateTime } from "../../utils/DateUtils";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -36,7 +35,7 @@ const { Option } = Select;
 interface Timekeeping {
     staffCode: string;
     staffName: string;
-    date: string;
+
     timeIn: string;
     timeOut: string;
 }
@@ -61,11 +60,6 @@ const Reports: React.FC = () => {
             key: "staffName",
         },
         {
-            title: "Ngày",
-            dataIndex: "date",
-            key: "date",
-        },
-        {
             title: "Giờ vào",
             dataIndex: "timeIn",
             key: "timeIn",
@@ -84,9 +78,8 @@ const Reports: React.FC = () => {
             const formattedData = data.map((item: any) => ({
                 staffCode: item.Staff.Code,
                 staffName: item.Staff.Fullname,
-                date: formatDate(item.Date),
-                timeIn: item.Time_in,
-                timeOut: item.Time_out,
+                timeIn: formatDateTime(item.Time_in),
+                timeOut: formatDateTime(item.Time_out),
             }));
             setDataSource(formattedData);
         } catch (error) {

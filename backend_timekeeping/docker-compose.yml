@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - ENTITY_SERVICE_URL=http://entity-service:3001
+      - TASK_SERVICE_URL=http://task-service:3002
+      - TIMEKEEPING_SERVICE_URL=http://timekeeping-service:3003
+      - UTILITY_SERVICE_URL=http://utility-service:3004
+    depends_on:
+      - entity-service
+      - task-service
+      - timekeeping-service
+      - utility-service
+
+  entity-service:
+    build: ./services/entity-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=timekeeping
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - postgres
+
+  task-service:
+    build: ./services/task-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=timekeeping
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - postgres
+
+  timekeeping-service:
+    build: ./services/timekeeping-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=timekeeping
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - MQTT_BROKER_URL=mqtt://mqtt-broker:1883
+    depends_on:
+      - postgres
+      - mqtt-broker
+
+  utility-service:
+    build: ./services/utility-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=timekeeping
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=timekeeping
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mqtt_data:/mosquitto/data
+      - mqtt_log:/mosquitto/log
+
+volumes:
+  postgres_data:
+  mqtt_data:
+  mqtt_log: 

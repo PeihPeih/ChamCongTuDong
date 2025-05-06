@@ -56,7 +56,7 @@ const TimeManagement: React.FC = () => {
                     staffID: log.staffID,
                     work_date: log.work_date,
                     working_hours: log.working_hours,
-                    work_unit: log.work_unit,
+                    work_unit: Math.round(log.work_unit * 100) / 100,
                 }));
                 setWorklog(formattedWorklogs);
             }
