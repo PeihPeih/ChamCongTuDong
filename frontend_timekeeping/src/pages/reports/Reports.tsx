@@ -15,6 +15,7 @@ import { API_URL } from "../../config";
 import moment from "moment";
 import * as XLSX from "xlsx";
 import { saveAs } from 'file-saver';
+import { formatDateTime } from "../../utils/DateUtils";
 const { Text } = Typography;
 const { Option } = Select;
 
@@ -134,8 +135,8 @@ const generateFullMonthData = (
             date: dateStr,
             dayOfWeek,
             caLamViec: `${data?.shift?.time_in ?? "--"} - ${data?.shift?.time_out ?? "--"}`,
-            checkIn: data?.checkin ?? "--",
-            checkOut: data?.checkout ?? "--",
+            checkIn: data?.checkin ? formatDateTime(data?.checkin) : "--",
+            checkOut: data?.checkout ? formatDateTime(data?.checkout) : "--",
             totalHours: data?.working_hours?.toFixed(2) ?? "--",
             workDone: data?.work_unit?.toFixed(2) ?? "--",
         });

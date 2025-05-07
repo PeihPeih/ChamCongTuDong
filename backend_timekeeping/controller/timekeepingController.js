@@ -173,7 +173,7 @@ export const saveTimekeepingFromMQTT = async (label, timestamp) => {
     }
 
     let existing = false;
-    if (shift.Type_shift === 1) {
+    if (shift.Type_shift == 1) {
       // Day shift: Check for entries on the same day
       existing = await Timekeeping.findOne({
         where: {
@@ -186,7 +186,8 @@ export const saveTimekeepingFromMQTT = async (label, timestamp) => {
           },
         },
       });
-    } else if (shift.Type_shift === 2) {
+    } else if (shift.Type_shift == 2) {
+
       // Night shift: Check for entries between [Shift.Time_in - 3 hours of previous day] and [0h -> shift.Time_out of same day]
       const currentDate = moment(timestamp, "YYYY/MM/DD HH:mm:ss");
       const shiftTimeIn = moment(shift.Time_in, "HH:mm:ss");
@@ -208,13 +209,14 @@ export const saveTimekeepingFromMQTT = async (label, timestamp) => {
           second: 0
         });
 
+      console.log(startTime, endTime);
       existing = await Timekeeping.findOne({
         where: {
           StaffID: staff.ID,
           Time_in: {
             [Op.between]: [
-              startTime.add(7, 'hours').toDate(),
-              endTime.add(7, 'hours').toDate(),
+              startTime.toDate(),
+              endTime.toDate(),
             ],
           },
         },
@@ -234,11 +236,11 @@ export const saveTimekeepingFromMQTT = async (label, timestamp) => {
       await existing.save();
       await insertOrUpdateWorklog(
         existing.StaffID,
-        shift,
         work_date,
         existing.Time_in,
         existing.Time_out
       );
+    
     }
   } catch (error) {
     console.log(error);

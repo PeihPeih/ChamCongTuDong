@@ -74,7 +74,7 @@ function LoginPage() {
         localStorage.setItem('token', data.token);
         localStorage.setItem("user", JSON.stringify(data.data));
         // Chuyển hướng đến trang dashboard
-        navigate('/overview');
+        navigate('/timesheet');
       } else {
         setError(data.message || "Đăng nhập thất bại");
       }

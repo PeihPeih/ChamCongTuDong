@@ -872,7 +872,6 @@ const Shift: React.FC = () => {
                                                 shifts.map((shift) => (
                                                     <Option key={shift.ID} value={shift.ID}>
                                                         {shift.Name} ({shift.Time_in} - {shift.Time_out})
-                                                        {shift.Type_shift === "1" ? " - Ca sáng" : " - Ca tối"}
                                                     </Option>
                                                 ))
                                             ) : (
@@ -932,7 +931,6 @@ const Shift: React.FC = () => {
                                                             disabled={isAssigned}
                                                         >
                                                             {shift.Name} ({shift.Time_in} - {shift.Time_out})
-                                                            {shift.Type_shift === "1" ? " - Ca sáng" : " - Ca tối"}
                                                             {isAssigned ? " (Đã phân công)" : ""}
                                                         </Option>
                                                     );

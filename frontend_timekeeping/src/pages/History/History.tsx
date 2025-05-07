@@ -78,8 +78,8 @@ const Reports: React.FC = () => {
             const formattedData = data.map((item: any) => ({
                 staffCode: item.Staff.Code,
                 staffName: item.Staff.Fullname,
-                timeIn: formatDateTime(item.Time_in),
-                timeOut: formatDateTime(item.Time_out),
+                timeIn: item.Time_in ? formatDateTime(item.Time_in) : "--",
+                timeOut: item.Time_out ? formatDateTime(item.Time_out) : "--",
             }));
             setDataSource(formattedData);
         } catch (error) {

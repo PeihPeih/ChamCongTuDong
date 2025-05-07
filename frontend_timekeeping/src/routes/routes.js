@@ -5,7 +5,6 @@ import AccountManagement from "../pages/Agency/AccountManagement";
 import Departments from "../pages/Agency/Departments";
 import Positions from "../pages/Agency/Positions";
 import Shifts from "../pages/Agency/Shifts";
-import OverView from "../pages/overview/Overview";
 import TimeManagement from "../pages/TimeKeeping/Timekeeping";
 import Dayoffs from "../pages/Dayoffs/Dayoffs";
 import History from "../pages/History/History";
@@ -27,8 +26,6 @@ const AppRoutes = () => {
 
       {/* Protected routes - Cần đăng nhập mới truy cập được */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<Navigate to="/overview" replace />} />
-        <Route path="/overview" element={<OverView />} />
         <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/history" element={<History />} />
         <Route path="/timesheet" element={<TimeManagement />} />
@@ -42,7 +39,7 @@ const AppRoutes = () => {
           <Route index element={<Departments />} />
           <Route path="departments" element={<Departments />} />
           <Route path="positions" element={<Positions />} />
-          <Route path="shifts" element={<StaffShiftManagement />} />
+          <Route path="shifts" element={<Shifts />} />
           <Route path="staffs" element={<AccountManagement />} />
           <Route path="roles" element={<RoleManagement />} />
         </Route>

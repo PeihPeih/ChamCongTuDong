@@ -55,7 +55,7 @@ const ChangePassword: React.FC = () => {
             setOldPassword("");
             setNewPassword("");
             setConfirmPassword("");
-            setTimeout(() => navigate("/overview"), 2000);
+            setTimeout(() => navigate("/timesheet"), 2000);
         } catch (error) {
             setError("Lỗi kết nối đến máy chủ");
         } finally {

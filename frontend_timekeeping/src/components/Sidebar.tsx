@@ -43,12 +43,6 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     {
-      key: "1",
-      icon: <HomeOutlined />,
-      label: <Link to="/overview">Tổng quan</Link>,
-      path: "/overview",
-    },
-    {
       key: "3",
       icon: <ClockCircleOutlined />,
       label: <Link to="/timesheet">Quản lý chấm công</Link>,
